@@ -55,39 +55,113 @@
   <div class="correction" id="förslag"></div>
 
 <script>
+  function hämtaFrånURL() {
+    const params = new URLSearchParams(window.location.search);
+    return params.get("fraga") || "";
+  }
+
+  function tolkaInput(input) {
+    const lower = input.toLowerCase();
+    let produkt = "";
+    let tillbehör = [];
+    let fel = false;
+    let förslag = "";
+
+    if (
+      lower.includes("iphone 150") ||
+      lower.includes("iphone150") ||
+      lower.includes("i phone 150")
+    ) {
+      fel = true;
+      förslag = "iPhone 15";
+    } else if (lower.includes("iphone 15")) {
+      produkt = "iPhone 15";
+      tillbehör = ["Skärmskydd", "MagSafe-laddare", "AirPods"];
+    } else if (lower.includes("airpods")) {
+      produkt = "AirPods Pro";
+      tillbehör = ["Laddningsetui", "Ear tips", "Lightning-kabel"];
+    } else if (lower.includes("galaxy s24")) {
+      produkt = "Samsung Galaxy S24";
+      tillbehör = ["Skal", "Trådlös laddare", "Galaxy Buds"];
+    } else if (lower.includes("iphone")) {
+      produkt = "iPhone (modell saknas)";
+      tillbehör = ["Skärmskydd", "Laddare"];
+    } else {
+      fel = true;
+    }
+
+    return { produkt, tillbehör, fel, förslag };
+  }
+
+  function visaFelmeddelande(förslag) {
+    document.getElementById("produkt").value = "";
+    document.getElementById("relaterade").innerHTML = "<em>🤔 Men vad menar du nu?</em>";
+    document.getElementById("tom-emoji").innerText = "😠";
+
+    const utterance = new SpeechSynthesisUtterance(
+      förslag
+        ? `Men vad menar du nu? Menade du ${förslag}?`
+        : "Men vad menar du nu?"
+    );
+    utterance.lang = "sv-SE";
+    speechSynthesis.speak(utterance);
+
+    if (förslag) {
+      document.getElementById("förslag").innerHTML = `
+        <button onclick="rättaTill('${förslag}')">Ja, jag menade ${förslag}</button>
+      `;
+    }
+  }
+
+  function visaResultat(produkt, tillbehör) {
+    document.getElementById("produkt").value = produkt;
+    document.getElementById("tom-emoji").innerText = "🤖";
+    document.getElementById("förslag").innerHTML = "";
+
+    const relaterade = document.getElementById("relaterade");
+    if (tillbehör.length > 0) {
+      relaterade.innerHTML = `<strong>Relaterade artiklar:</strong><br>• ${tillbehör.join("<br>• ")}`;
+    } else {
+      relaterade.innerHTML = "";
+    }
+  }
+
+  function tolkaBeställning() {
+    const input = document.getElementById("userInput").value;
+    const { produkt, tillbehör, fel, förslag } = tolkaInput(input);
+    if (fel) {
+      visaFelmeddelande(förslag);
+    } else {
+      visaResultat(produkt, tillbehör);
+    }
+  }
+
   function rättaTill(korrekt) {
     const emoji = document.getElementById("tom-emoji");
     const produktfält = document.getElementById("produkt");
     const relaterade = document.getElementById("relaterade");
     const förslagRuta = document.getElementById("förslag");
 
-    // Sätt textvärdet manuellt
     document.getElementById("userInput").value = "Jag vill beställa en " + korrekt;
-
-    // Emoji blir glad
     emoji.innerText = "😄";
 
-    // Töm tidigare tal som pågick
+    // Avbryt pågående tal
     if (speechSynthesis.speaking) {
       speechSynthesis.cancel();
     }
 
-    // Skapa båda röstmeddelandena
     const braVal = new SpeechSynthesisUtterance(`Bra val! ${korrekt} är ett utmärkt val.`);
     const bekräfta = new SpeechSynthesisUtterance("Din beställning är mottagen!");
 
     braVal.lang = "sv-SE";
     bekräfta.lang = "sv-SE";
 
-    // När första talet är klart, kör nästa
     braVal.onend = () => {
       speechSynthesis.speak(bekräfta);
     };
 
-    // Starta "Bra val"
     speechSynthesis.speak(braVal);
 
-    // Visa produkt och tillbehör
     produktfält.value = korrekt;
     förslagRuta.innerHTML = "";
     relaterade.innerHTML = `
@@ -97,11 +171,15 @@
       • AirPods
     `;
   }
+
+  window.onload = function () {
+    const fråga = hämtaFrånURL();
+    if (fråga.trim() !== "") {
+      document.getElementById("userInput").value = fråga;
+      tolkaBeställning();
+    }
+  };
 </script>
-
-
 
 </body>
 </html>
-
-
