@@ -67,7 +67,11 @@
       let fel = false;
       let förslag = "";
 
-      if (lower.includes("iphone 150")) {
+      if (
+        lower.includes("iphone 150") ||
+        lower.includes("iphone150") ||
+        lower.includes("i phone 150")
+      ) {
         fel = true;
         förslag = "iPhone 15";
       } else if (lower.includes("iphone 15")) {
@@ -94,9 +98,11 @@
       document.getElementById("relaterade").innerHTML = "<em>🤔 Men vad menar du nu?</em>";
       document.getElementById("tom-emoji").innerText = "😠";
 
-      const utterance = new SpeechSynthesisUtterance(förslag
-        ? `Men vad menar du nu? Menade du ${förslag}?`
-        : "Men vad menar du nu?");
+      const utterance = new SpeechSynthesisUtterance(
+        förslag
+          ? `Men vad menar du nu? Menade du ${förslag}?`
+          : "Men vad menar du nu?"
+      );
       utterance.lang = "sv-SE";
       speechSynthesis.speak(utterance);
 
