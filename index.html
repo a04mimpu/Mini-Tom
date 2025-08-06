@@ -4,11 +4,28 @@
   <meta charset="UTF-8">
   <title>Mini-Tom</title>
   <style>
-    body { font-family: sans-serif; text-align: center; margin-top: 50px; background: #f9f9f9; }
-    .agent { font-size: 100px; transition: transform 0.3s ease; }
-    .agent.blink { transform: scale(1.1); }
-    #response { margin-top: 20px; font-size: 20px; color: #444; }
-    input, button { padding: 10px; font-size: 16px; }
+    body {
+      font-family: sans-serif;
+      text-align: center;
+      margin-top: 50px;
+      background-color: #f9f9f9;
+    }
+    .agent {
+      font-size: 100px;
+      transition: transform 0.3s ease;
+    }
+    .agent.blink {
+      transform: scale(1.1);
+    }
+    #response {
+      margin-top: 20px;
+      font-size: 20px;
+      color: #444;
+    }
+    input, button {
+      padding: 10px;
+      font-size: 16px;
+    }
   </style>
 </head>
 <body>
@@ -17,46 +34,58 @@
   <button onclick="ask()">Fråga</button>
   <div id="response"></div>
 
-<script>
-  function ask() {
-    const input = document.getElementById("input").value;
+ <script>
+  async function ask() {
+    const input = document.getElementById("input").value.trim();
     const agent = document.getElementById("agent");
     const responseBox = document.getElementById("response");
 
     agent.classList.add("blink");
     setTimeout(() => agent.classList.remove("blink"), 300);
 
-    // Dummy GPT-svar
+    const normalized = input.toLowerCase();
 
-
-// Enkla känslouttryck baserat på input
-if (input.toLowerCase().includes("arg")) {
-  agent.innerText = "😠";
-} else if (input.toLowerCase().includes("ledsen")) {
-  agent.innerText = "😢";
-} else if (input.toLowerCase().includes("kul") || input.toLowerCase().includes("roligt")) {
-  agent.innerText = "😄";
-} else if (input.toLowerCase().includes("kram")) {
-  agent.innerText = "🤗";
-} else {
-  agent.innerText = "🤖"; // Standard
-}
-
-    let svar;
-    if (input.toLowerCase().includes("hej")) {
-      svar = "Hej på dig! Vad kul att du pratar med mig!";
-    } else if (input.toLowerCase().includes("vem är du")) {
-      svar = "Jag är Mini-Nomi, en testversion av en superintelligent AI.";
+    // 🧠 Känsloreaktion
+    if (normalized.includes("arg")) {
+      agent.innerText = "😠";
+    } else if (normalized.includes("ledsen")) {
+      agent.innerText = "😢";
+    } else if (normalized.includes("kul") || normalized.includes("roligt")) {
+      agent.innerText = "😄";
+    } else if (normalized.includes("kram")) {
+      agent.innerText = "🤗";
     } else {
-      svar = "Hmm... det måste jag fundera lite mer på.";
+      agent.innerText = "🤖";
     }
 
-    // Visa svaret
+    // 🎯 Trigger: skapa beställning
+    if (
+if (
+  normalized.includes("beställning") ||
+  normalized.includes("skapa") && normalized.includes("beställning") ||
+  normalized.includes("jag vill") && normalized.includes("beställa") ||
+  normalized.includes("göra") && normalized.includes("beställning")
+)
+    ) {
+      const svar = "Javisst, jag hjälper dig!";
+      responseBox.innerText = svar;
+
+      const utterance = new SpeechSynthesisUtterance(svar);
+      utterance.lang = "sv-SE";
+      speechSynthesis.speak(utterance);
+
+      setTimeout(() => {
+        window.location.href = "bestallning.html";
+      }, 3000);
+      return;
+    }
+
+    // 🤔 Standard-svar
+    const svar = "Hmm... det måste jag fundera lite mer på.";
     responseBox.innerText = svar;
 
-    // 🗣 Text-to-Speech
     const utterance = new SpeechSynthesisUtterance(svar);
-    utterance.lang = "sv-SE"; // svenska
+    utterance.lang = "sv-SE";
     speechSynthesis.speak(utterance);
   }
 </script>
