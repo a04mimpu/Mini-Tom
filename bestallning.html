@@ -52,14 +52,16 @@
     .cart-item {
       display: flex;
       justify-content: space-between;
-      padding: 5px 10px;
+      align-items: center;
+      padding: 8px 12px;
       border-bottom: 1px solid #eee;
+      font-size: 16px;
     }
     .cart-item button {
       background: none;
       border: none;
-      color: red;
-      font-size: 16px;
+      color: crimson;
+      font-size: 20px;
       cursor: pointer;
     }
   </style>
@@ -69,10 +71,11 @@
   <div class="agent" id="tom-emoji">🤖</div>
 
   <h1>Mini-Toms Beställningshjälp</h1>
-  <p>Skriv vad du vill beställa så hjälper Tom dig!</p>
+  <p>Skriv eller säg vad du vill beställa så hjälper Tom dig!</p>
 
   <input type="text" id="userInput" placeholder="Ex: Jag vill beställa en iPhone 15" />
   <button onclick="tolkaBeställning()">Tolka</button>
+  <button onclick="startaRöst()">🎤 Säg din beställning</button>
 
   <input type="text" id="produkt" placeholder="Produktnamn" readonly />
   <div class="suggestions" id="relaterade"></div>
@@ -95,7 +98,7 @@
     cartList.innerHTML = cart.map((item, index) => `
       <div class="cart-item">
         <span>${item}</span>
-        <button onclick="taBort(${index})">✖</button>
+        <button onclick="taBort(${index})">❌</button>
       </div>
     `).join("");
   }
@@ -165,7 +168,7 @@
 
   function visaResultat(produkt, tillbehör) {
     document.getElementById("produkt").value = produkt;
-    document.getElementById("tom-emoji").innerText = "🤖";
+    document.getElementById("tom-emoji").innerText = "😄";
     document.getElementById("förslag").innerHTML = "";
 
     const relaterade = document.getElementById("relaterade");
@@ -221,6 +224,25 @@
 
     cart.push(korrekt);
     uppdateraKorg();
+  }
+
+  function startaRöst() {
+    const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+    recognition.lang = "sv-SE";
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+
+    recognition.onresult = (event) => {
+      const transcript = event.results[0][0].transcript;
+      document.getElementById("userInput").value = transcript;
+      tolkaBeställning();
+    };
+
+    recognition.onerror = (event) => {
+      alert("Kunde inte känna igen röst: " + event.error);
+    };
+
+    recognition.start();
   }
 
   window.onload = function () {
