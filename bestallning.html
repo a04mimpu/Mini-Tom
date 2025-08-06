@@ -28,23 +28,31 @@
       transition: transform 0.3s ease;
       margin-bottom: 10px;
     }
+    .correction {
+      margin-top: 10px;
+    }
+    .correction button {
+      background-color: #fefefe;
+      border: 1px solid #aaa;
+      font-size: 14px;
+      padding: 8px;
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
 
-  <!-- Mini-Toms emoji -->
   <div class="agent" id="tom-emoji">🤖</div>
 
   <h1>Mini-Toms Beställningshjälp</h1>
   <p>Skriv vad du vill beställa så hjälper Tom dig!</p>
 
-  <!-- Input -->
   <input type="text" id="userInput" placeholder="Ex: Jag vill beställa en iPhone 15" />
   <button onclick="tolkaBeställning()">Tolka</button>
 
-  <!-- Produktfält + tillbehör -->
   <input type="text" id="produkt" placeholder="Produktnamn" readonly />
   <div class="suggestions" id="relaterade"></div>
+  <div class="correction" id="förslag"></div>
 
   <script>
     function hämtaFrånURL() {
@@ -57,12 +65,14 @@
       let produkt = "";
       let tillbehör = [];
       let fel = false;
+      let förslag = "";
 
-      if (lower.includes("iphone 15")) {
+      if (lower.includes("iphone 150")) {
+        fel = true;
+        förslag = "iPhone 15";
+      } else if (lower.includes("iphone 15")) {
         produkt = "iPhone 15";
         tillbehör = ["Skärmskydd", "MagSafe-laddare", "AirPods"];
-      } else if (lower.includes("iphone 150")) {
-        fel = true;
       } else if (lower.includes("airpods")) {
         produkt = "AirPods Pro";
         tillbehör = ["Laddningsetui", "Ear tips", "Lightning-kabel"];
@@ -76,22 +86,31 @@
         fel = true;
       }
 
-      return { produkt, tillbehör, fel };
+      return { produkt, tillbehör, fel, förslag };
     }
 
-    function visaFelmeddelande() {
+    function visaFelmeddelande(förslag) {
       document.getElementById("produkt").value = "";
       document.getElementById("relaterade").innerHTML = "<em>🤔 Men vad menar du nu?</em>";
       document.getElementById("tom-emoji").innerText = "😠";
 
-      const utterance = new SpeechSynthesisUtterance("Men vad menar du nu?");
+      const utterance = new SpeechSynthesisUtterance(förslag
+        ? `Men vad menar du nu? Menade du ${förslag}?`
+        : "Men vad menar du nu?");
       utterance.lang = "sv-SE";
       speechSynthesis.speak(utterance);
+
+      if (förslag) {
+        document.getElementById("förslag").innerHTML = `
+          <button onclick="rättaTill('${förslag}')">Ja, jag menade ${förslag}</button>
+        `;
+      }
     }
 
     function visaResultat(produkt, tillbehör) {
       document.getElementById("produkt").value = produkt;
       document.getElementById("tom-emoji").innerText = "🤖";
+      document.getElementById("förslag").innerHTML = "";
 
       const relaterade = document.getElementById("relaterade");
       if (tillbehör.length > 0) {
@@ -103,12 +122,17 @@
 
     function tolkaBeställning() {
       const input = document.getElementById("userInput").value;
-      const { produkt, tillbehör, fel } = tolkaInput(input);
+      const { produkt, tillbehör, fel, förslag } = tolkaInput(input);
       if (fel) {
-        visaFelmeddelande();
+        visaFelmeddelande(förslag);
       } else {
         visaResultat(produkt, tillbehör);
       }
+    }
+
+    function rättaTill(korrekt) {
+      document.getElementById("userInput").value = "Jag vill beställa en " + korrekt;
+      tolkaBeställning();
     }
 
     window.onload = function () {
