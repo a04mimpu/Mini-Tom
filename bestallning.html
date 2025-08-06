@@ -32,17 +32,17 @@
 </head>
 <body>
 
-  <!-- Emoji-reaktion -->
+  <!-- Mini-Toms emoji -->
   <div class="agent" id="tom-emoji">🤖</div>
 
   <h1>Mini-Toms Beställningshjälp</h1>
   <p>Skriv vad du vill beställa så hjälper Tom dig!</p>
 
-  <!-- Inputfält -->
+  <!-- Input -->
   <input type="text" id="userInput" placeholder="Ex: Jag vill beställa en iPhone 15" />
   <button onclick="tolkaBeställning()">Tolka</button>
 
-  <!-- Automatisk ifyllnad -->
+  <!-- Produktfält + tillbehör -->
   <input type="text" id="produkt" placeholder="Produktnamn" readonly />
   <div class="suggestions" id="relaterade"></div>
 
@@ -66,3 +66,41 @@
       } else if (lower.includes("airpods")) {
         produkt = "AirPods Pro";
         tillbehör = ["Laddningsetui", "Ear tips", "Lightning-kabel"];
+      } else if (lower.includes("galaxy s24")) {
+        produkt = "Samsung Galaxy S24";
+        tillbehör = ["Skal", "Trådlös laddare", "Galaxy Buds"];
+      } else if (lower.includes("iphone")) {
+        produkt = "iPhone (modell saknas)";
+        tillbehör = ["Skärmskydd", "Laddare"];
+      } else {
+        fel = true;
+      }
+
+      return { produkt, tillbehör, fel };
+    }
+
+    function visaFelmeddelande() {
+      document.getElementById("produkt").value = "";
+      document.getElementById("relaterade").innerHTML = "<em>🤔 Men vad menar du nu?</em>";
+      document.getElementById("tom-emoji").innerText = "😠";
+
+      const utterance = new SpeechSynthesisUtterance("Men vad menar du nu?");
+      utterance.lang = "sv-SE";
+      speechSynthesis.speak(utterance);
+    }
+
+    function visaResultat(produkt, tillbehör) {
+      document.getElementById("produkt").value = produkt;
+      document.getElementById("tom-emoji").innerText = "🤖";
+
+      const relaterade = document.getElementById("relaterade");
+      if (tillbehör.length > 0) {
+        relaterade.innerHTML = `<strong>Relaterade artiklar:</strong><br>• ${tillbehör.join("<br>• ")}`;
+      } else {
+        relaterade.innerHTML = "";
+      }
+    }
+
+    function tolkaBeställning() {
+      const input = document.getElementById("userInput").value;
+      const { produkt, tillbehör,
