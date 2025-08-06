@@ -126,16 +126,6 @@
     }
   }
 
-  function tolkaBeställning() {
-    const input = document.getElementById("userInput").value;
-    const { produkt, tillbehör, fel, förslag } = tolkaInput(input);
-    if (fel) {
-      visaFelmeddelande(förslag);
-    } else {
-      visaResultat(produkt, tillbehör);
-    }
-  }
-
   function rättaTill(korrekt) {
     const emoji = document.getElementById("tom-emoji");
     const produktfält = document.getElementById("produkt");
@@ -145,22 +135,34 @@
     document.getElementById("userInput").value = "Jag vill beställa en " + korrekt;
     emoji.innerText = "😄";
 
-    // Avbryt pågående tal
     if (speechSynthesis.speaking) {
       speechSynthesis.cancel();
     }
 
-    const braVal = new SpeechSynthesisUtterance(`Bra val! ${korrekt} är ett utmärkt val.`);
-    const bekräfta = new SpeechSynthesisUtterance("Din beställning är mottagen!");
+    function spelaUpp() {
+      const röster = speechSynthesis.getVoices();
+      const svenskRöst = röster.find(r => r.lang === "sv-SE");
 
-    braVal.lang = "sv-SE";
-    bekräfta.lang = "sv-SE";
+      const braVal = new SpeechSynthesisUtterance(`Bra val! ${korrekt} är ett utmärkt val.`);
+      const bekräfta = new SpeechSynthesisUtterance("Din beställning är mottagen!");
 
-    braVal.onend = () => {
-      speechSynthesis.speak(bekräfta);
-    };
+      if (svenskRöst) {
+        braVal.voice = svenskRöst;
+        bekräfta.voice = svenskRöst;
+      }
 
-    speechSynthesis.speak(braVal);
+      braVal.onend = () => {
+        speechSynthesis.speak(bekräfta);
+      };
+
+      speechSynthesis.speak(braVal);
+    }
+
+    if (speechSynthesis.getVoices().length > 0) {
+      spelaUpp();
+    } else {
+      speechSynthesis.onvoiceschanged = spelaUpp;
+    }
 
     produktfält.value = korrekt;
     förslagRuta.innerHTML = "";
