@@ -29,8 +29,9 @@
   </style>
 </head>
 <body>
+
   <div class="agent" id="agent">🤖</div>
-  <input type="text" id="input" placeholder="Skriv något roligt till Mini-Tom..." />
+  <input type="text" id="input" placeholder="Skriv något till Mini-Tom..." />
   <button onclick="ask()">Fråga</button>
   <div id="response"></div>
 
@@ -45,7 +46,7 @@
 
     const normalized = input.toLowerCase();
 
-    // Känsloreaktion
+    // Känsloreaktioner
     if (normalized.includes("arg")) {
       agent.innerText = "😠";
     } else if (normalized.includes("ledsen")) {
@@ -58,7 +59,7 @@
       agent.innerText = "🤖";
     }
 
-    // 🎯 Direktkommandon till beställning
+    // Frasmatchning för beställning
     const beställningsfraser = [
       "skapa beställning",
       "jag vill skapa en beställning",
@@ -67,7 +68,9 @@
       "göra en beställning",
       "skapa en beställning",
       "starta beställning",
-      "ny beställning"
+      "ny beställning",
+      "jag vill beställa en iphone",
+      "jag vill beställa en samsung"
     ];
 
     const match = beställningsfraser.some(fras => normalized.includes(fras));
@@ -80,13 +83,15 @@
       utterance.lang = "sv-SE";
       speechSynthesis.speak(utterance);
 
+      // Skicka vidare med frågan i URL:en
+      const encoded = encodeURIComponent(input);
       setTimeout(() => {
-        window.location.href = "bestallning.html";
+        window.location.href = `bestallning.html?fraga=${encoded}`;
       }, 3000);
       return;
     }
 
-    // Standard-svar
+    // Standardsvar
     const svar = "Hmm... det måste jag fundera lite mer på.";
     responseBox.innerText = svar;
 
@@ -96,8 +101,5 @@
   }
 </script>
 
-
 </body>
 </html>
-
-
