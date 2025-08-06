@@ -34,7 +34,7 @@
   <button onclick="ask()">Fråga</button>
   <div id="response"></div>
 
- <script>
+<script>
   async function ask() {
     const input = document.getElementById("input").value.trim();
     const agent = document.getElementById("agent");
@@ -45,7 +45,7 @@
 
     const normalized = input.toLowerCase();
 
-    // 🧠 Känsloreaktion
+    // Känsloreaktion
     if (normalized.includes("arg")) {
       agent.innerText = "😠";
     } else if (normalized.includes("ledsen")) {
@@ -58,15 +58,21 @@
       agent.innerText = "🤖";
     }
 
-    // 🎯 Trigger: skapa beställning
-    if (
-if (
-  normalized.includes("beställning") ||
-  normalized.includes("skapa") && normalized.includes("beställning") ||
-  normalized.includes("jag vill") && normalized.includes("beställa") ||
-  normalized.includes("göra") && normalized.includes("beställning")
-)
-    ) {
+    // 🎯 Direktkommandon till beställning
+    const beställningsfraser = [
+      "skapa beställning",
+      "jag vill skapa en beställning",
+      "beställning",
+      "jag vill beställa",
+      "göra en beställning",
+      "skapa en beställning",
+      "starta beställning",
+      "ny beställning"
+    ];
+
+    const match = beställningsfraser.some(fras => normalized.includes(fras));
+
+    if (match) {
       const svar = "Javisst, jag hjälper dig!";
       responseBox.innerText = svar;
 
@@ -80,7 +86,7 @@ if (
       return;
     }
 
-    // 🤔 Standard-svar
+    // Standard-svar
     const svar = "Hmm... det måste jag fundera lite mer på.";
     responseBox.innerText = svar;
 
@@ -90,6 +96,8 @@ if (
   }
 </script>
 
+
 </body>
 </html>
+
 
