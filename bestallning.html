@@ -1,4 +1,3 @@
-<!-- bestallning.html -->
 <!DOCTYPE html>
 <html lang="sv">
 <head>
@@ -8,13 +7,72 @@
     body {
       font-family: sans-serif;
       text-align: center;
-      margin-top: 100px;
-      background-color: #f0fff5;
+      margin: 50px auto;
+      background-color: #f3f9ff;
+      max-width: 600px;
+    }
+    input, button {
+      padding: 10px;
+      font-size: 16px;
+      width: 80%;
+      margin: 10px auto;
+      display: block;
+    }
+    .suggestions {
+      margin-top: 20px;
+      font-size: 14px;
+      color: #333;
     }
   </style>
 </head>
 <body>
-  <h1>Mini-Toms Beställningssida</h1>
-  <p>Här kan du snart skapa riktiga beställningar!</p>
+
+  <h1>Mini-Toms Beställningshjälp</h1>
+  <p>Skriv vad du vill beställa så hjälper Tom dig!</p>
+
+  <!-- Inputfält för naturligt språk -->
+  <input type="text" id="userInput" placeholder="Jag vill beställa en iPhone 15..." />
+  <button onclick="tolkaBeställning()">Tolka</button>
+
+  <!-- Automatisk ifyllnad -->
+  <input type="text" id="produkt" placeholder="Produktnamn" readonly />
+  <div class="suggestions" id="relaterade"></div>
+
+<script>
+  function tolkaBeställning() {
+    const input = document.getElementById("userInput").value.toLowerCase();
+    const produktfält = document.getElementById("produkt");
+    const relaterade = document.getElementById("relaterade");
+
+    let produkt = "";
+    let tillbehör = [];
+
+    // Enkel tolkning
+    if (input.includes("iphone 15")) {
+      produkt = "iPhone 15";
+      tillbehör = ["Skärmskydd", "MagSafe-laddare", "AirPods"];
+    } else if (input.includes("airpods")) {
+      produkt = "AirPods Pro";
+      tillbehör = ["Laddningsetui", "Ear tips", "Lightning-kabel"];
+    } else if (input.includes("galaxy s24")) {
+      produkt = "Samsung Galaxy S24";
+      tillbehör = ["Skal", "Trådlös laddare", "Galaxy Buds"];
+    } else {
+      produkt = "Ej tolkad – försök igen";
+      tillbehör = [];
+    }
+
+    // Fyll i produkt
+    produktfält.value = produkt;
+
+    // Visa tillbehör
+    if (tillbehör.length > 0) {
+      relaterade.innerHTML = `<strong>Relaterade artiklar:</strong><br>• ${tillbehör.join("<br>• ")}`;
+    } else {
+      relaterade.innerHTML = "";
+    }
+  }
+</script>
+
 </body>
 </html>
