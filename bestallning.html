@@ -23,56 +23,46 @@
       font-size: 14px;
       color: #333;
     }
+    .agent {
+      font-size: 100px;
+      transition: transform 0.3s ease;
+      margin-bottom: 10px;
+    }
   </style>
 </head>
 <body>
 
+  <!-- Emoji-reaktion -->
+  <div class="agent" id="tom-emoji">🤖</div>
+
   <h1>Mini-Toms Beställningshjälp</h1>
   <p>Skriv vad du vill beställa så hjälper Tom dig!</p>
 
-  <!-- Inputfält för naturligt språk -->
-  <input type="text" id="userInput" placeholder="Jag vill beställa en iPhone 15..." />
+  <!-- Inputfält -->
+  <input type="text" id="userInput" placeholder="Ex: Jag vill beställa en iPhone 15" />
   <button onclick="tolkaBeställning()">Tolka</button>
 
   <!-- Automatisk ifyllnad -->
   <input type="text" id="produkt" placeholder="Produktnamn" readonly />
   <div class="suggestions" id="relaterade"></div>
 
-<script>
-  function tolkaBeställning() {
-    const input = document.getElementById("userInput").value.toLowerCase();
-    const produktfält = document.getElementById("produkt");
-    const relaterade = document.getElementById("relaterade");
-
-    let produkt = "";
-    let tillbehör = [];
-
-    // Enkel tolkning
-    if (input.includes("iphone 15")) {
-      produkt = "iPhone 15";
-      tillbehör = ["Skärmskydd", "MagSafe-laddare", "AirPods"];
-    } else if (input.includes("airpods")) {
-      produkt = "AirPods Pro";
-      tillbehör = ["Laddningsetui", "Ear tips", "Lightning-kabel"];
-    } else if (input.includes("galaxy s24")) {
-      produkt = "Samsung Galaxy S24";
-      tillbehör = ["Skal", "Trådlös laddare", "Galaxy Buds"];
-    } else {
-      produkt = "Ej tolkad – försök igen";
-      tillbehör = [];
+  <script>
+    function hämtaFrånURL() {
+      const params = new URLSearchParams(window.location.search);
+      return params.get("fraga") || "";
     }
 
-    // Fyll i produkt
-    produktfält.value = produkt;
+    function tolkaInput(input) {
+      const lower = input.toLowerCase();
+      let produkt = "";
+      let tillbehör = [];
+      let fel = false;
 
-    // Visa tillbehör
-    if (tillbehör.length > 0) {
-      relaterade.innerHTML = `<strong>Relaterade artiklar:</strong><br>• ${tillbehör.join("<br>• ")}`;
-    } else {
-      relaterade.innerHTML = "";
-    }
-  }
-</script>
-
-</body>
-</html>
+      if (lower.includes("iphone 15")) {
+        produkt = "iPhone 15";
+        tillbehör = ["Skärmskydd", "MagSafe-laddare", "AirPods"];
+      } else if (lower.includes("iphone 150")) {
+        fel = true;
+      } else if (lower.includes("airpods")) {
+        produkt = "AirPods Pro";
+        tillbehör = ["Laddningsetui", "Ear tips", "Lightning-kabel"];
