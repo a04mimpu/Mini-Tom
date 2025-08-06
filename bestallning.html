@@ -103,4 +103,22 @@
 
     function tolkaBeställning() {
       const input = document.getElementById("userInput").value;
-      const { produkt, tillbehör,
+      const { produkt, tillbehör, fel } = tolkaInput(input);
+      if (fel) {
+        visaFelmeddelande();
+      } else {
+        visaResultat(produkt, tillbehör);
+      }
+    }
+
+    window.onload = function () {
+      const fråga = hämtaFrånURL();
+      if (fråga.trim() !== "") {
+        document.getElementById("userInput").value = fråga;
+        tolkaBeställning();
+      }
+    };
+  </script>
+
+</body>
+</html>
