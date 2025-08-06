@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8">
+  <title>Mini-Tom</title>
+  <style>
+    body { font-family: sans-serif; text-align: center; margin-top: 50px; background: #f9f9f9; }
+    .agent { font-size: 100px; transition: transform 0.3s ease; }
+    .agent.blink { transform: scale(1.1); }
+    #response { margin-top: 20px; font-size: 20px; color: #444; }
+    input, button { padding: 10px; font-size: 16px; }
+  </style>
+</head>
+<body>
+  <div class="agent" id="agent">🤖</div>
+  <input type="text" id="input" placeholder="Skriv något till Mini-Tom..." />
+  <button onclick="ask()">Fråga</button>
+  <div id="response"></div>
+
+<script>
+  function ask() {
+    const input = document.getElementById("input").value;
+    const agent = document.getElementById("agent");
+    const responseBox = document.getElementById("response");
+
+    agent.classList.add("blink");
+    setTimeout(() => agent.classList.remove("blink"), 300);
+
+    // Dummy GPT-svar
+
+
+// Enkla känslouttryck baserat på input
+if (input.toLowerCase().includes("arg")) {
+  agent.innerText = "😠";
+} else if (input.toLowerCase().includes("ledsen")) {
+  agent.innerText = "😢";
+} else if (input.toLowerCase().includes("kul") || input.toLowerCase().includes("roligt")) {
+  agent.innerText = "😄";
+} else if (input.toLowerCase().includes("kram")) {
+  agent.innerText = "🤗";
+} else {
+  agent.innerText = "🤖"; // Standard
+}
+
+    let svar;
+    if (input.toLowerCase().includes("hej")) {
+      svar = "Hej på dig! Vad kul att du pratar med mig!";
+    } else if (input.toLowerCase().includes("vem är du")) {
+      svar = "Jag är Mini-Nomi, en testversion av en superintelligent AI.";
+    } else {
+      svar = "Hmm... det måste jag fundera lite mer på.";
+    }
+
+    // Visa svaret
+    responseBox.innerText = svar;
+
+    // 🗣 Text-to-Speech
+    const utterance = new SpeechSynthesisUtterance(svar);
+    utterance.lang = "sv-SE"; // svenska
+    speechSynthesis.speak(utterance);
+  }
+</script>
+
+</body>
+</html>
