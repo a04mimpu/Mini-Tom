@@ -54,31 +54,40 @@
   <div class="suggestions" id="relaterade"></div>
   <div class="correction" id="förslag"></div>
 
- <script>
+<script>
   function rättaTill(korrekt) {
     const emoji = document.getElementById("tom-emoji");
     const produktfält = document.getElementById("produkt");
     const relaterade = document.getElementById("relaterade");
     const förslagRuta = document.getElementById("förslag");
 
+    // Sätt textvärdet manuellt
     document.getElementById("userInput").value = "Jag vill beställa en " + korrekt;
 
-    // Visa glad emoji
+    // Emoji blir glad
     emoji.innerText = "😄";
 
-    // Säg "Bra val"
-    const braVal = new SpeechSynthesisUtterance(`Bra val! ${korrekt} är ett utmärkt val.`);
-    braVal.lang = "sv-SE";
-    speechSynthesis.speak(braVal);
+    // Töm tidigare tal som pågick
+    if (speechSynthesis.speaking) {
+      speechSynthesis.cancel();
+    }
 
-    // När första meningen är klar, säg bekräftelsen
+    // Skapa båda röstmeddelandena
+    const braVal = new SpeechSynthesisUtterance(`Bra val! ${korrekt} är ett utmärkt val.`);
+    const bekräfta = new SpeechSynthesisUtterance("Din beställning är mottagen!");
+
+    braVal.lang = "sv-SE";
+    bekräfta.lang = "sv-SE";
+
+    // När första talet är klart, kör nästa
     braVal.onend = () => {
-      const bekräfta = new SpeechSynthesisUtterance("Din beställning är mottagen!");
-      bekräfta.lang = "sv-SE";
       speechSynthesis.speak(bekräfta);
     };
 
-    // Fyll i resultat manuellt
+    // Starta "Bra val"
+    speechSynthesis.speak(braVal);
+
+    // Visa produkt och tillbehör
     produktfält.value = korrekt;
     förslagRuta.innerHTML = "";
     relaterade.innerHTML = `
@@ -91,6 +100,8 @@
 </script>
 
 
+
 </body>
 </html>
+
 
