@@ -25,14 +25,22 @@
     input, button {
       padding: 10px;
       font-size: 16px;
+      margin: 10px;
     }
   </style>
 </head>
 <body>
 
   <div class="agent" id="agent">🤖</div>
+
+  <h1>Mini-Toms Beställningshjälp</h1>
+  <p>Skriv eller säg något till Mini-Tom!</p>
+
   <input type="text" id="input" placeholder="Skriv något till Mini-Tom..." />
+  <br>
   <button onclick="ask()">Fråga</button>
+  <button onclick="startaTaligenkänning()">🎤 Säg din beställning</button>
+
   <div id="response"></div>
 
 <script>
@@ -46,7 +54,7 @@
 
     const normalized = input.toLowerCase();
 
-    // Känsloreaktioner
+    // Emoji-reaktion
     if (normalized.includes("arg")) {
       agent.innerText = "😠";
     } else if (normalized.includes("ledsen")) {
@@ -59,18 +67,15 @@
       agent.innerText = "🤖";
     }
 
-    // Frasmatchning för beställning
+    // Trigger: beställning
     const beställningsfraser = [
       "skapa beställning",
       "jag vill skapa en beställning",
       "beställning",
       "jag vill beställa",
       "göra en beställning",
-      "skapa en beställning",
-      "starta beställning",
-      "ny beställning",
-      "jag vill beställa en iphone",
-      "jag vill beställa en samsung"
+      "skapa en order",
+      "ny beställning"
     ];
 
     const match = beställningsfraser.some(fras => normalized.includes(fras));
@@ -83,21 +88,44 @@
       utterance.lang = "sv-SE";
       speechSynthesis.speak(utterance);
 
-      // Skicka vidare med frågan i URL:en
-      const encoded = encodeURIComponent(input);
       setTimeout(() => {
+        const encoded = encodeURIComponent(input);
         window.location.href = `bestallning.html?fraga=${encoded}`;
       }, 3000);
       return;
     }
 
-    // Standardsvar
+    // Standard-svar
     const svar = "Hmm... det måste jag fundera lite mer på.";
     responseBox.innerText = svar;
 
     const utterance = new SpeechSynthesisUtterance(svar);
     utterance.lang = "sv-SE";
     speechSynthesis.speak(utterance);
+  }
+
+  function startaTaligenkänning() {
+    if (!('webkitSpeechRecognition' in window)) {
+      alert("Din webbläsare stödjer inte taligenkänning.");
+      return;
+    }
+
+    const recognition = new webkitSpeechRecognition();
+    recognition.lang = "sv-SE";
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+
+    recognition.onresult = function (event) {
+      const talText = event.results[0][0].transcript;
+      document.getElementById("input").value = talText;
+      ask();
+    };
+
+    recognition.onerror = function (event) {
+      alert("Fel vid taligenkänning: " + event.error);
+    };
+
+    recognition.start();
   }
 </script>
 
