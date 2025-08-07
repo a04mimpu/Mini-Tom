@@ -129,24 +129,32 @@
       relaterade.innerHTML = "<strong>Relaterade artiklar:</strong><br>• " + tillbehör.join("<br>• ");
     }
 
-    function tolkaOchSkicka() {
-      const input = document.getElementById("beskrivning").value;
-      const { produkt, tillbehör, fel } = tolkaInput(input);
-      const { chef, adress } = extractChefOchAdress(input);
 
-      if (fel) {
-        alert("Tom kunde inte förstå beställningen.");
-        return;
-      }
+function tolkaOchSkicka() {
+  const input = document.getElementById("beskrivning").value;
+  const { produkt, tillbehör, fel } = tolkaInput(input);
+  const { chef, adress } = extractChefOchAdress(input);
 
-      // Spara i localStorage
-      localStorage.setItem("produkter", JSON.stringify([produkt, ...tillbehör]));
-      localStorage.setItem("mottagareNamn", chef);
-      localStorage.setItem("mottagareAdress", adress);
+  if (fel) {
+    alert("Tom kunde inte förstå beställningen.");
+    return;
+  }
 
-      const tal = new SpeechSynthesisUtterance("Jag lägger allt i varukorgen och skickar dig vidare.");
-      tal.lang = "sv-SE";
-      window.speechSynthesis.speak(tal);
+  // Spara i localStorage
+  localStorage.setItem("produkter", JSON.stringify([produkt, ...tillbehör]));
+  localStorage.setItem("mottagareNamn", chef);
+  localStorage.setItem("mottagareAdress", adress);
+
+  // Skapa talsyntes och vidarebefordra när klart
+  const tal = new SpeechSynthesisUtterance("Jag lägger allt i varukorgen och skickar dig vidare.");
+  tal.lang = "sv-SE";
+  tal.onend = () => {
+    window.location.href = "varukorg.html"; // Gå till nästa sida efter att han pratat klart
+  };
+
+  speechSynthesis.cancel(); // Avbryt ev. pågående tal
+  speechSynthesis.speak(tal);
+}
 
       // Vänta lite så att talet hinner spelas upp
       setTimeout(() => {
