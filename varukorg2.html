@@ -180,9 +180,7 @@
     document.getElementById("adress").innerText = adress;
 
   // 🗣️ Robot-Tom pratar
-    const tal = new SpeechSynthesisUtterance(
-      `Här är din varukorg: ${produkter.join(", ")}. 
-      Leverans sker till ${adress}. 
+   
       Jag skickar nu ett mejl till mottagande chef, ${chef}.`
     );
     tal.lang = "sv-SE";
