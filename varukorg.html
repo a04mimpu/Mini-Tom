@@ -1,98 +1,117 @@
 <!DOCTYPE html>
 <html lang="sv">
 <head>
-    <meta charset="UTF-9">
-  <title>TestProceedo</title>
-  <meta charset="UTF-7">
-  <title>Varukorg</title>
+  <meta charset="UTF-8" />
+  <title>Din varukorg</title>
   <style>
     body {
-      font-family: sans-serif;
-      text-align: center;
-      background: #fffaf0;
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      background-color: #f9f9f9;
+    }
+
+    /* Toppraden lik Visma Proceedo */
+    .topbar {
+      background-color: #0066a1;
+      color: white;
+      display: flex;
+      align-items: center;
+      padding: 10px 20px;
+    }
+
+    .topbar span {
+      margin-right: 30px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    .topbar span:hover {
+      text-decoration: underline;
+    }
+
+    .topbar .cart {
+      margin-left: auto;
+      font-size: 22px;
+    }
+
+    /* Innehåll */
+    .container {
       padding: 40px;
+      text-align: center;
     }
-    .box {
-      background: #e0ffe0;
-      border: 2px solid #a0dca0;
+
+    .cart-box {
+      background: #ffffff;
+      border: 1px solid #ccc;
+      border-radius: 8px;
       padding: 20px;
-      margin: 20px auto;
-      width: 60%;
-      border-radius: 10px;
+      max-width: 600px;
+      margin: 0 auto;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
     }
+
+    .cart-item {
+      font-size: 18px;
+      margin: 10px 0;
+    }
+
     .check {
-      font-size: 40px;
       color: green;
+      font-size: 24px;
     }
+
+    .info-box {
+      margin-top: 30px;
+      font-size: 16px;
+    }
+
   </style>
 </head>
 <body>
-<h1>TestProceedo</h1>
-  <h1>Din varukorg 🛒</h1>
 
-  <div class="box">
-    <div class="check">✅</div>
-    <div><strong>Produkt:</strong> <span id="produkt">-</span></div>
+  <!-- Topbar -->
+  <div class="topbar">
+    <span>Visma Proceedo</span>
+    <span>Inköp</span>
+    <span>Alla beställningar</span>
+    <span>Fakturor</span>
+    <span>Uppföljning</span>
+    <div class="cart">🛒</div>
   </div>
 
-  <div class="box">
-    <strong>Leverans till:</strong>
-    <div id="chef">-</div>
-    <div id="adress">-</div>
+  <!-- Innehåll -->
+  <div class="container">
+    <h1>Din varukorg</h1>
+    <div class="cart-box" id="cart">
+      <div class="cart-item check"><strong>✅ Produkter:</strong></div>
+      <div id="produkter"></div>
+    </div>
+
+    <div class="info-box">
+      <div><strong>Leverans till:</strong></div>
+      <div id="chef">-</div>
+      <div id="adress">-</div>
+    </div>
   </div>
 
   <script>
-    // Hämta data från localStorage
     const produkter = JSON.parse(localStorage.getItem("produkter")) || [];
     const chef = localStorage.getItem("mottagareNamn") || "Okänd chef";
     const adress = localStorage.getItem("mottagareAdress") || "Okänd adress";
 
-    // Visa produkterna
-    const produktEl = document.getElementById("produkt");
-    if (produkter.length > 0) {
-      produktEl.innerHTML = produkter.map(p => `✅ ${p}`).join("<br>");
-    } else {
-      produktEl.innerText = "-";
-    }
+    const produktEl = document.getElementById("produkter");
+    produktEl.innerHTML = produkter.map(p => `<div class="cart-item">✅ ${p}</div>`).join("");
 
-    // Visa chef och adress
     document.getElementById("chef").innerText = chef;
     document.getElementById("adress").innerText = adress;
 
-    // 🗣️ Robot-Tom pratar
+    // Tom läser upp varukorgen
     const tal = new SpeechSynthesisUtterance(
-      `Här är din varukorg: ${produkter.join(", ")}. 
-      Leverans sker till ${adress}. 
-      Jag skickar nu ett mejl till mottagande chef, ${chef}.`
+      `Jag har lagt ${produkter.join(", ")} i varukorgen. Leverans går till ${chef} på ${adress}.`
     );
     tal.lang = "sv-SE";
-    tal.pitch = 1.1;
-    tal.rate = 1;
-
-    // När han pratat klart: öppna Outlook
-    tal.onend = () => {
-      öppnaOutlookMejl();
-    };
-
-    speechSynthesis.cancel(); // Avbryt pågående tal
+    speechSynthesis.cancel();
     speechSynthesis.speak(tal);
-
-    // 📧 Öppna färdigifyllt mejl
-    function öppnaOutlookMejl() {
-      const email = chef
-        .toLowerCase()
-        .replace(/[åä]/g, 'a')
-        .replace(/ö/g, 'o')
-        .replace(/\s+/g, '.') + "@exempel.se";
-
-      const subject = encodeURIComponent("Beställning från Tom");
-      const body = encodeURIComponent(
-        `Hej ${chef},\n\nFöljande produkter har beställts:\n\n- ${produkter.join("\n- ")}\n\nLeveransadress:\n${adress}\n\nVänliga hälsningar,\nTom – AI-assistent`
-      );
-
-      window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
-    }
   </script>
-
 </body>
 </html>
