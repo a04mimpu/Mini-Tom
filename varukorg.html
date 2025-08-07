@@ -8,16 +8,6 @@
       font-family: sans-serif;
       text-align: center;
       background: #fffaf0;
-<!DOCTYPE html>
-<html lang="sv">
-<head>
-  <meta charset="UTF-8">
-  <title>Varukorg</title>
-  <style>
-    body {
-      font-family: sans-serif;
-      text-align: center;
-      background: #fffaf0;
       padding: 40px;
     }
     .box {
@@ -35,6 +25,7 @@
   </style>
 </head>
 <body>
+
   <h1>Din varukorg 🛒</h1>
 
   <div class="box">
@@ -51,8 +42,8 @@
   <script>
     // Hämta data från localStorage
     const produkter = JSON.parse(localStorage.getItem("produkter")) || [];
-    const chef = localStorage.getItem("mottagareNamn") || "-";
-    const adress = localStorage.getItem("mottagareAdress") || "-";
+    const chef = localStorage.getItem("mottagareNamn") || "Okänd chef";
+    const adress = localStorage.getItem("mottagareAdress") || "Okänd adress";
 
     // Visa produkterna
     const produktEl = document.getElementById("produkt");
@@ -67,57 +58,39 @@
     document.getElementById("adress").innerText = adress;
 
     // 🗣️ Robot-Tom pratar
-    const tts = new SpeechSynthesisUtterance();
-    tts.lang = "sv-SE";
-    tts.pitch = 1.1;
-    tts.rate = 1;
+    const tal = new SpeechSynthesisUtterance(
+      `Här är din varukorg: ${produkter.join(", ")}. 
+      Leverans sker till ${adress}. 
+      Jag skickar nu ett mejl till mottagande chef, ${chef}.`
+    );
+    tal.lang = "sv-SE";
+    tal.pitch = 1.1;
+    tal.rate = 1;
 
-    if (produkter.length > 0) {
-      tts.text = `Jag har lagt ${produkter.join(", ")} i korgen. Leveransen går till ${chef} på ${adress}.`;
-    } else {
-      tts.text = "Inga produkter har lagts i korgen.";
+    // När han pratat klart: öppna Outlook
+    tal.onend = () => {
+      öppnaOutlookMejl();
+    };
+
+    speechSynthesis.cancel(); // Avbryt pågående tal
+    speechSynthesis.speak(tal);
+
+    // 📧 Öppna färdigifyllt mejl
+    function öppnaOutlookMejl() {
+      const email = chef
+        .toLowerCase()
+        .replace(/[åä]/g, 'a')
+        .replace(/ö/g, 'o')
+        .replace(/\s+/g, '.') + "@exempel.se";
+
+      const subject = encodeURIComponent("Beställning från Tom");
+      const body = encodeURIComponent(
+        `Hej ${chef},\n\nFöljande produkter har beställts:\n\n- ${produkter.join("\n- ")}\n\nLeveransadress:\n${adress}\n\nVänliga hälsningar,\nTom – AI-assistent`
+      );
+
+      window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
     }
-
-    window.speechSynthesis.speak(tts);
   </script>
-</body>
-</html>
 
-  </style>
-</head>
-<body>
-
-  <script>
-    // Hämta data från localStorage
-    const produkter = JSON.parse(localStorage.getItem("produkter")) || [];
-    const chef = localStorage.getItem("mottagareNamn") || "-";
-    const adress = localStorage.getItem("mottagareAdress") || "-";
-
-    // Visa produkterna
-    const produktEl = document.getElementById("produkt");
-    if (produkter.length > 0) {
-      produktEl.innerHTML = produkter.map(p => `✅ ${p}`).join("<br>");
-    } else {
-      produktEl.innerText = "-";
-    }
-
-    // Visa chef och adress
-    document.getElementById("chef").innerText = chef;
-    document.getElementById("adress").innerText = adress;
-
-    // 🗣️ Robot-Tom pratar
-    const tts = new SpeechSynthesisUtterance();
-    tts.lang = "sv-SE";
-    tts.pitch = 1.1;
-    tts.rate = 1;
-
-    if (produkter.length > 0) {
-      tts.text = `Jag har lagt ${produkter.join(", ")} i korgen. Leveransen går till ${chef} på ${adress}.`;
-    } else {
-      tts.text = "Inga produkter har lagts i korgen.";
-    }
-
-    window.speechSynthesis.speak(tts);
-  </script>
 </body>
 </html>
