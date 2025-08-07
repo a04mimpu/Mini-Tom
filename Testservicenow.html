@@ -31,12 +31,13 @@
   </style>
 </head>
 <body>
-  <div class="emoji">🧾</div>
+  <div class="emoji">🤖</div>
   <h1>TestServiceNow</h1>
 
-  <input type="text" id="produkt" placeholder="Vad vill du beställa? (ex: iPhone 15)">
-  <input type="text" id="chef" placeholder="Mottagande chef (ex: Anna Larsson)">
-  <input type="text" id="adress" placeholder="Adress (ex: Gatan 2)">
+  <!-- Förifyllda fält -->
+  <input type="text" id="produkt" value="iPhone 15">
+  <input type="text" id="chef" value="Anna Larsson">
+  <input type="text" id="adress" value="Gatan 2">
   
   <button onclick="tolkaOchSkicka()">Tolka & skicka</button>
 
@@ -53,17 +54,12 @@
         return;
       }
 
-      // I verkligheten: allt hamnar i ett beskrivningsfält
+      // Beskrivningen är vad som normalt syns i ServiceNow
       const beskrivning = `${produkt}, ${chef}, ${adress}`;
 
-      // Splittra för att simulera tolkning
-      const delar = beskrivning.split(",");
-
-      const encodedProdukt = encodeURIComponent(delar[0].trim());
-      const encodedChef = encodeURIComponent(delar[1].trim());
-      const encodedAdress = encodeURIComponent(delar[2].trim());
-
-      window.location.href = `varukorg.html?produkt=${encodedProdukt}&chef=${encodedChef}&adress=${encodedAdress}`;
+      // Skicka med data till nästa sida (varukorg.html)
+      const url = `varukorg.html?produkt=${encodeURIComponent(produkt)}&chef=${encodeURIComponent(chef)}&adress=${encodeURIComponent(adress)}&beskrivning=${encodeURIComponent(beskrivning)}`;
+      window.location.href = url;
     }
   </script>
 </body>
