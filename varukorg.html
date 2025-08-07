@@ -2,150 +2,184 @@
 <html lang="sv">
 <head>
   <meta charset="UTF-8">
-  <title>Tom - Röststyrd meny</title>
+  <title>Smart Beställning – Tom</title>
   <style>
     body {
       margin: 0;
-      font-family: "Segoe UI", sans-serif;
+      font-family: sans-serif;
       display: flex;
+      flex-direction: column;
+    }
+
+    /* Toppmeny */
+    .topbar {
+      background: #0067b8;
+      color: white;
+      padding: 10px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .topbar div {
+      display: flex;
+      gap: 30px;
+      font-size: 18px;
     }
 
     .sidebar {
-      width: 280px;
-      background: #4CAF50;
-      height: 100vh;
-      padding-top: 20px;
-      color: white;
-      position: fixed;
-      left: 0;
-      top: 0;
-      box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+      width: 240px;
+      background: #d1f5d3;
+      padding: 20px;
+      color: #000;
     }
 
-    .sidebar-header {
-      font-size: 20px;
-      font-weight: bold;
-      padding: 15px 20px;
-      background-color: #3b9441;
+    .sidebar h2 {
+      margin-top: 0;
+    }
+
+    .sidebar ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    .sidebar li {
+      margin: 10px 0;
+      font-size: 16px;
       display: flex;
       justify-content: space-between;
-      align-items: center;
     }
 
-    .badge {
+    .main {
+      flex-grow: 1;
+      padding: 40px;
+      background: #f8f8f8;
+      text-align: center;
+    }
+
+    .container {
+      display: flex;
+    }
+
+    .talk-box {
       background: white;
-      color: #3b9441;
-      font-weight: bold;
-      border-radius: 12px;
-      padding: 2px 10px;
-      font-size: 14px;
-    }
-
-    .menu-item {
-      padding: 14px 20px;
-      border-top: 1px solid rgba(255,255,255,0.2);
-      display: flex;
-      justify-content: space-between;
-      cursor: pointer;
-      transition: background 0.2s;
-    }
-
-    .menu-item:hover {
-      background-color: rgba(255, 255, 255, 0.1);
-    }
-
-    .count {
-      font-weight: bold;
-      background: rgba(255,255,255,0.2);
-      padding: 2px 8px;
+      padding: 20px;
       border-radius: 10px;
-    }
-
-    .highlight {
-      border: 1px solid white;
-      background: transparent;
-    }
-
-    .content {
-      margin-left: 300px;
-      padding: 30px;
-    }
-
-    #status {
       margin-top: 20px;
-      font-size: 18px;
-      color: #333;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+
+    .factura-popup {
+      display: none;
+      position: fixed;
+      top: 20%;
+      left: 35%;
+      background: white;
+      padding: 20px;
+      border: 2px solid green;
+      box-shadow: 0 0 10px #333;
+      z-index: 1000;
+    }
+
+    .factura-popup button {
+      margin-top: 10px;
     }
   </style>
 </head>
 <body>
 
-  <div class="sidebar">
-    <div class="sidebar-header">
-      Att hantera <span class="badge">21</span>
+  <!-- Toppmeny -->
+  <div class="topbar">
+    <div>
+      <span>Visma Proceedo</span>
+      <span>Inköp</span>
+      <span>Alla beställningar</span>
+      <span>Fakturor</span>
+      <span>Uppföljning</span>
     </div>
-    <div class="menu-item" id="godkanna">Beställningar att godkänna <span class="count">0</span></div>
-    <div class="menu-item" id="ejskickade">Ej skickade beställningar <span class="count">0</span></div>
-    <div class="menu-item" id="fakturor">Fakturor <span class="count">1</span></div>
-    <div class="menu-item" id="leveranser">Leveranser och order <span class="count highlight">20</span></div>
-    <div class="menu-item" id="varukorgar">Varukorgar <span class="count">0</span></div>
+    <div>
+      🛒
+    </div>
   </div>
 
-  <div class="content">
-    <h1>Hej! Jag är Tom 🤖</h1>
-    <p>Prata med mig! Exempel: <strong>"Visa mig fakturan"</strong></p>
-    <p id="status">🎙️ Jag lyssnar...</p>
+  <!-- Sida med meny till vänster -->
+  <div class="container">
+    <div class="sidebar">
+      <h2>Att hantera</h2>
+      <ul>
+        <li><span>Godkänna</span> <span>0</span></li>
+        <li><span>Ej skickade</span> <span>0</span></li>
+        <li><span>Fakturor</span> <span id="antalFakturor">1</span></li>
+        <li><span>Leveranser</span> <span>2</span></li>
+        <li><span>Varukorgar</span> <span>0</span></li>
+      </ul>
+    </div>
+
+    <div class="main">
+      <h1>Hej, jag är Tom 🧠</h1>
+      <div class="talk-box">
+        <p>Klicka och säg <strong>"Visa mig fakturan"</strong></p>
+        <button onclick="startListening()">🎤 Prata med Tom</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Faktura-popup -->
+  <div class="factura-popup" id="fakturaRuta">
+    <h3>Faktura</h3>
+    <p>Fakturan gäller beställning #3471<br>Summa: 4 289 kr<br>Förfallodatum: 2025-09-01</p>
+    <button onclick="stängFaktura()">Stäng</button>
   </div>
 
   <script>
-    const speak = (text) => {
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = "sv-SE";
-      speechSynthesis.speak(utterance);
-    };
-
-    const handleCommand = (transcript) => {
-      transcript = transcript.toLowerCase();
-
-      if (transcript.includes("faktura")) {
-        const antal = parseInt(document.querySelector('#fakturor .count').innerText);
-        if (antal > 0) {
-          speak("Jag ser att du har en faktura. Jag öppnar den nu.");
-          alert("👉 Tom öppnar fakturan!");
-          // window.location.href = "fakturor.html";
-        } else {
-          speak("Du har inga fakturor att visa just nu.");
-        }
-      } else if (transcript.includes("leverans")) {
-        const antal = parseInt(document.querySelector('#leveranser .count').innerText);
-        if (antal > 0) {
-          speak("Jag ser att du har leveranser och order. Jag visar dem nu.");
-          alert("👉 Tom öppnar leveranser och order!");
-        } else {
-          speak("Det finns inga leveranser just nu.");
-        }
-      } else {
-        speak("Jag förstod inte riktigt vad du menade. Vill du visa en faktura eller leverans?");
+    function startListening() {
+      if (!('webkitSpeechRecognition' in window)) {
+        alert("Din webbläsare stöder inte röstigenkänning.");
+        return;
       }
-    };
 
-    const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-    recognition.lang = "sv-SE";
-    recognition.interimResults = false;
-    recognition.continuous = true;
+      const recognition = new webkitSpeechRecognition();
+      recognition.lang = "sv-SE";
+      recognition.continuous = false;
+      recognition.interimResults = false;
 
-    recognition.onresult = function(event) {
-      const transcript = event.results[event.results.length - 1][0].transcript;
-      document.getElementById("status").innerText = `🎤 Du sa: "${transcript}"`;
-      handleCommand(transcript);
-    };
+      recognition.onresult = function(event) {
+        const text = event.results[0][0].transcript.toLowerCase();
+        console.log("Du sa:", text);
 
-    recognition.onerror = function(event) {
-      document.getElementById("status").innerText = "🚫 Fel vid röstigenkänning: " + event.error;
-    };
+        if (text.includes("visa mig fakturan")) {
+          const antal = parseInt(document.getElementById("antalFakturor").innerText, 10);
+          if (antal > 0) {
+            visaFaktura();
+          } else {
+            säg("Det finns inga fakturor att visa.");
+          }
+        } else {
+          säg("Jag förstod inte vad du sa.");
+        }
+      };
 
-    recognition.start();
+      recognition.onerror = function() {
+        säg("Jag hörde inte, försök igen.");
+      };
+
+      recognition.start();
+    }
+
+    function säg(text) {
+      const tts = new SpeechSynthesisUtterance(text);
+      tts.lang = "sv-SE";
+      speechSynthesis.speak(tts);
+    }
+
+    function visaFaktura() {
+      säg("Här är den senaste fakturan.");
+      document.getElementById("fakturaRuta").style.display = "block";
+    }
+
+    function stängFaktura() {
+      document.getElementById("fakturaRuta").style.display = "none";
+    }
   </script>
-
 </body>
 </html>
