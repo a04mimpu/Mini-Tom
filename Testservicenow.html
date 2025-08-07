@@ -91,44 +91,47 @@ iPhone 15, Gatan 2, mottagande chef Anna-Lena Larsson
       return { produkt, tillbehör, fel, förslag };
     }
 
-    function tolkaBeställning() {
-      const input = document.getElementById("beskrivning").value;
-      const { produkt, tillbehör, fel, förslag } = tolkaInput(input);
-      const emoji = document.getElementById("tom-emoji");
-      const feedback = document.getElementById("feedback");
-      const cart = document.getElementById("cartItems");
-      const relaterade = document.getElementById("relaterade");
+   function tolkaBeställning() {
+  const input = document.getElementById("beskrivning").value;
+  const { produkt, tillbehör, fel, förslag } = tolkaInput(input);
+  const emoji = document.getElementById("tom-emoji");
+  const feedback = document.getElementById("feedback");
+  const cart = document.getElementById("cartItems");
+  const relaterade = document.getElementById("relaterade");
 
-      if (fel) {
-        emoji.innerText = "😠";
-        feedback.innerText = "Men vad gör du nu?" + (förslag ? " Menade du " + förslag + "?" : "");
-        speechSynthesis.cancel();
-        const felTal = new SpeechSynthesisUtterance("Men vad gör du nu?");
-        felTal.lang = "sv-SE";
-        speechSynthesis.speak(felTal);
-        relaterade.innerHTML = "";
-        return;
-      }
+  // Avbryt pågående tal
+  window.speechSynthesis.cancel();
 
-      emoji.innerText = "😄";
-      feedback.innerText = `Jag lade ${produkt} och tillbehör i varukorgen.`;
+  if (fel) {
+    emoji.innerText = "😠";
+    feedback.innerText = "Men vad gör du nu?" + (förslag ? " Menade du " + förslag + "?" : "");
+    const felTal = new SpeechSynthesisUtterance("Men vad gör du nu?" + (förslag ? " Menade du " + förslag + "?" : ""));
+    felTal.lang = "sv-SE";
+    window.speechSynthesis.speak(felTal);
+    relaterade.innerHTML = "";
+    cart.innerHTML = "";
+    return;
+  }
 
-      speechSynthesis.cancel();
-      const svar = new SpeechSynthesisUtterance(`Javisst! Jag lade till ${produkt} och tillbehören.`);
-      svar.lang = "sv-SE";
-      speechSynthesis.speak(svar);
+  emoji.innerText = "😄";
+  feedback.innerText = `Jag lade ${produkt} och tillbehör i varukorgen.`;
 
-      const items = [`${produkt}`, ...tillbehör];
-      cart.innerHTML = "";
-      items.forEach(item => {
-        const li = document.createElement("li");
-        li.classList.add("cart-item");
-        li.textContent = item;
-        cart.appendChild(li);
-      });
+  const svar = new SpeechSynthesisUtterance(`Javisst! Jag lade till ${produkt} och tillbehören.`);
+  svar.lang = "sv-SE";
+  window.speechSynthesis.speak(svar);
 
-      relaterade.innerHTML = "<strong>Relaterade artiklar:</strong><br>• " + tillbehör.join("<br>• ");
-    }
+  const items = [`${produkt}`, ...tillbehör];
+  cart.innerHTML = "";
+  items.forEach(item => {
+    const li = document.createElement("li");
+    li.classList.add("cart-item");
+    li.textContent = item;
+    cart.appendChild(li);
+  });
+
+  relaterade.innerHTML = "<strong>Relaterade artiklar:</strong><br>• " + tillbehör.join("<br>• ");
+}
+
 
     function startSpeech() {
       const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
