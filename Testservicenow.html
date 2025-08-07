@@ -1,52 +1,69 @@
-
-
 <!DOCTYPE html>
 <html lang="sv">
 <head>
   <meta charset="UTF-8">
-  <title>TestServiceNow</title>
+  <title>Test ServiceNow</title>
   <style>
-    body { font-family: sans-serif; text-align: center; background: #f0f8ff; padding: 40px; }
-    input, button { padding: 12px; font-size: 16px; width: 80%; margin: 10px auto; display: block; }
-    .agent { font-size: 80px; margin-bottom: 10px; }
+    body {
+      font-family: sans-serif;
+      background-color: #eef7ff;
+      text-align: center;
+      margin: 50px auto;
+    }
+
+    input, button {
+      padding: 10px;
+      width: 70%;
+      margin: 10px auto;
+      font-size: 16px;
+      display: block;
+    }
+
+    .emoji {
+      font-size: 64px;
+    }
+
+    #felmeddelande {
+      color: red;
+      font-weight: bold;
+      display: none;
+    }
   </style>
 </head>
 <body>
-  <div class="agent" id="tom-emoji">🤖</div>
+  <div class="emoji">🧾</div>
   <h1>TestServiceNow</h1>
-  <p>Fyll i beskrivningen:</p>
-  <input type="text" id="beskrivning" placeholder="Ex: iPhone 15, Gatan 2, mottagande chef Anna Larsson, ansvarskod 12345" />
-  <button onclick="tolka()">Tolka & skicka</button>
+
+  <input type="text" id="produkt" placeholder="Vad vill du beställa? (ex: iPhone 15)">
+  <input type="text" id="chef" placeholder="Mottagande chef (ex: Anna Larsson)">
+  <input type="text" id="adress" placeholder="Adress (ex: Gatan 2)">
+  
+  <button onclick="tolkaOchSkicka()">Tolka & skicka</button>
+
+  <p id="felmeddelande">😡 Men vad gör du nu? Alla fält måste fyllas i!</p>
 
   <script>
-    function tolka() {
-      const input = document.getElementById("beskrivning").value;
+    function tolkaOchSkicka() {
+      const produkt = document.getElementById("produkt").value.trim();
+      const chef = document.getElementById("chef").value.trim();
+      const adress = document.getElementById("adress").value.trim();
 
-      // Grundläggande tolkning
-      const produktMatch = input.match(/iphone ?15|airpods|galaxy s24/i);
-      const adressMatch = input.match(/\b(?:[A-ZÅÄÖ][a-zåäö]+ ?\d*)/g);
-      const chefMatch = input.match(/chef ([A-ZÅÄÖ][a-zåäö]+ [A-ZÅÄÖ][a-zåäö]+)/i);
-
-      const produkt = produktMatch ? produktMatch[0] : "";
-      const adress = adressMatch && adressMatch.length > 1 ? adressMatch[1] : "";
-      const chef = chefMatch ? chefMatch[1] : "";
-
-      if (produkt && adress && chef) {
-        document.getElementById("tom-emoji").innerText = "✅";
-        const tts = new SpeechSynthesisUtterance("Jag lägger varorna i korgen");
-        tts.lang = "sv-SE";
-        speechSynthesis.speak(tts);
-
-        // Skicka vidare med info i URL
-        setTimeout(() => {
-          window.location.href = `varukorg.html?produkt=${encodeURIComponent(produkt)}&adress=${encodeURIComponent(adress)}&chef=${encodeURIComponent(chef)}`;
-        }, 2000);
-      } else {
-        document.getElementById("tom-emoji").innerText = "😠";
-        const tts = new SpeechSynthesisUtterance("Jag förstår inte. Kontrollera din beskrivning.");
-        tts.lang = "sv-SE";
-        speechSynthesis.speak(tts);
+      if (!produkt || !chef || !adress) {
+        document.getElementById("felmeddelande").style.display = "block";
+        return;
       }
+
+      // I verkligheten: allt hamnar i ett beskrivningsfält
+      const beskrivning = `${produkt}, ${chef}, ${adress}`;
+
+      // Splittra för att simulera tolkning
+      const delar = beskrivning.split(",");
+
+      const encodedProdukt = encodeURIComponent(delar[0].trim());
+      const encodedChef = encodeURIComponent(delar[1].trim());
+      const encodedAdress = encodeURIComponent(delar[2].trim());
+
+      window.location.href = `varukorg.html?produkt=${encodedProdukt}&chef=${encodedChef}&adress=${encodedAdress}`;
     }
   </script>
 </body>
