@@ -1,41 +1,82 @@
-
-
 <!DOCTYPE html>
 <html lang="sv">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <title>Varukorg</title>
   <style>
-    body { font-family: sans-serif; padding: 20px; background: #f9fff0; }
-    .agent { font-size: 60px; }
-    .korg { border: 1px solid #ccc; padding: 15px; background: #fff; margin-top: 20px; }
-    .item { margin: 5px 0; }
-    .check { color: green; margin-right: 5px; }
-    .info { font-weight: bold; margin-top: 20px; }
-    .thumb { font-size: 40px; color: green; }
+    body {
+      font-family: sans-serif;
+      background-color: #f3f9ff;
+      text-align: center;
+      padding: 40px;
+      max-width: 600px;
+      margin: auto;
+    }
+    .agent {
+      font-size: 80px;
+      margin-bottom: 10px;
+    }
+    .artiklar {
+      margin-top: 20px;
+      font-size: 18px;
+      text-align: left;
+      display: inline-block;
+      background-color: #fff;
+      padding: 15px;
+      border-radius: 8px;
+      box-shadow: 0 0 8px rgba(0,0,0,0.1);
+    }
+    .artiklar li::before {
+      content: '✅ ';
+    }
+    .mottagare {
+      margin-top: 20px;
+      font-weight: bold;
+      font-size: 16px;
+      color: #444;
+    }
   </style>
 </head>
 <body>
-  <div class="agent">🤖</div>
-  <h1>Din varukorg</h1>
-  <div class="korg" id="korg-innehall"></div>
-  <div class="info" id="leveransinfo"></div>
-  <div class="thumb">👍</div>
+
+  <div class="agent" id="tom">👍</div>
+  <h2>Varukorg</h2>
+
+  <ul class="artiklar" id="artiklar"></ul>
+
+  <div class="mottagare" id="mottagare"></div>
 
   <script>
-    const korg = JSON.parse(localStorage.getItem("cartItems")) || ["iPhone 15"];
-    const chef = localStorage.getItem("chef") || "okänd chef";
-    const adress = localStorage.getItem("adress") || "okänd adress";
+    function speak(text) {
+      const u = new SpeechSynthesisUtterance(text);
+      u.lang = "sv-SE";
+      speechSynthesis.speak(u);
+    }
 
-    const korgContainer = document.getElementById("korg-innehall");
-    korgContainer.innerHTML = korg.map(item => `<div class="item"><span class="check">✅</span>${item}</div>`).join("");
+    // Hämtar artiklar och mottagare från localStorage
+    const artiklar = JSON.parse(localStorage.getItem("artiklar")) || [];
+    const mottagare = localStorage.getItem("mottagare") || "Okänd mottagare";
 
-    const leveransinfo = document.getElementById("leveransinfo");
-    leveransinfo.textContent = `Mottagare: ${chef}, ${adress}`;
+    const lista = document.getElementById("artiklar");
+    const mottagareRuta = document.getElementById("mottagare");
 
-    const uttal = new SpeechSynthesisUtterance(`Beställningen till ${chef} på ${adress} är redo!`);
-    uttal.lang = "sv-SE";
-    speechSynthesis.speak(uttal);
+    // Visa artiklar
+    if (artiklar.length > 0) {
+      artiklar.forEach(item => {
+        const li = document.createElement("li");
+        li.textContent = item;
+        lista.appendChild(li);
+      });
+      speak("Artiklarna är nu i korgen!");
+    } else {
+      lista.innerHTML = "<li>Inga artiklar tillagda</li>";
+      document.getElementById("tom").innerText = "😕";
+      speak("Jag hittade inga artiklar i korgen.");
+    }
+
+    // Visa mottagare
+    mottagareRuta.textContent = `Mottagare: ${mottagare}`;
   </script>
+
 </body>
 </html>
