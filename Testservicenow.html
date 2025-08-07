@@ -126,10 +126,7 @@
         cart.appendChild(li);
       });
 
-      relaterade.innerHTML = "<strong>Relaterade artiklar:</strong><br>• " + tillbehör.join("<br>• ");
-    }
-
-
+     
 function tolkaOchSkicka() {
   const input = document.getElementById("beskrivning").value;
   const { produkt, tillbehör, fel } = tolkaInput(input);
