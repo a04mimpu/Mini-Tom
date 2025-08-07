@@ -145,19 +145,18 @@ function tolkaOchSkicka() {
   localStorage.setItem("mottagareNamn", chef);
   localStorage.setItem("mottagareAdress", adress);
 
-  // Skapa talsyntes och vidarebefordra när klart
+  // Skapa talsyntes
   const tal = new SpeechSynthesisUtterance("Jag lägger allt i varukorgen och skickar dig vidare.");
   tal.lang = "sv-SE";
+
+  // När talet är klart, gå till varukorg
   tal.onend = () => {
-    window.location.href = "varukorg.html"; // Gå till nästa sida efter att han pratat klart
+    window.location.href = "varukorg.html";
   };
 
-  speechSynthesis.cancel(); // Avbryt ev. pågående tal
+  speechSynthesis.cancel();
   speechSynthesis.speak(tal);
 }
-
-  
-    }
   </script>
 
 </body>
