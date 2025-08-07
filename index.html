@@ -1,134 +1,101 @@
+
 <!DOCTYPE html>
 <html lang="sv">
 <head>
-  <meta charset="UTF-8">
-  <title>Tom</title>
-  <style>
-    body {
-      font-family: sans-serif;
-      text-align: center;
-      margin-top: 50px;
-      background-color: #f9f9f9;
-    }
-    .agent {
-      font-size: 100px;
-      transition: transform 0.3s ease;
-    }
-    .agent.blink {
-      transform: scale(1.1);
-    }
-    #response {
-      margin-top: 20px;
-      font-size: 20px;
-      color: #444;
-    }
-    input, button {
-      padding: 10px;
-      font-size: 16px;
-      margin: 10px;
-    }
-  </style>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mini-Toms Beställningshjälp</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f7ff;
+            text-align: center;
+            padding: 20px;
+        }
+        h1 {
+            margin-bottom: 0;
+        }
+        input, button {
+            margin: 10px;
+            padding: 10px;
+            font-size: 1rem;
+        }
+        .cart {
+            margin-top: 30px;
+            border: 1px solid #ccc;
+            padding: 15px;
+            display: inline-block;
+            border-radius: 10px;
+            background-color: #fff;
+        }
+    </style>
 </head>
 <body>
+    <h1>Mini-Toms Beställningshjälp</h1>
+    <p>Skriv eller säg vad du vill beställa så hjälper Tom dig!</p>
 
-  <div class="agent" id="agent">🤖</div>
+    <input type="text" id="orderInput" placeholder="Ex: Jag vill beställa en iPhone 15" size="40" />
+    <br />
+    <button onclick="tolkaBeställning()">Tolka</button>
+    <button onclick="startVoiceRecognition()">🎤 Säg din beställning</button>
 
-  <h1>Mini-Toms Beställningshjälp</h1>
-  <p>Skriv eller säg något till Mini-Tom!</p>
+    <div class="cart" id="cartContainer" style="display:none;">
+        <h2>🛒 Din varukorg</h2>
+        <ul id="cartList"></ul>
+    </div>
 
-  <input type="text" id="input" placeholder="Skriv något till Mini-Tom..." />
-  <br>
-  <button onclick="ask()">Fråga</button>
-  <button onclick="startaTaligenkänning()">🎤 Säg din beställning</button>
+    <script>
+        const produkter = ["iPhone 15", "iPad", "MacBook", "AirPods"];
 
-  <div id="response"></div>
+        function tolkaBeställning() {
+            const input = document.getElementById("orderInput").value.toLowerCase();
+            const hittad = produkter.find(produkt => input.includes(produkt.toLowerCase()));
+            if (hittad) {
+                läggTillIVarukorgen(hittad);
+                läsUpp(`${hittad} har lagts till i varukorgen!`);
+            } else {
+                alert("Kunde inte tolka din beställning.");
+            }
+        }
 
-<script>
-  async function ask() {
-    const input = document.getElementById("input").value.trim();
-    const agent = document.getElementById("agent");
-    const responseBox = document.getElementById("response");
+        function läggTillIVarukorgen(produkt) {
+            const cartContainer = document.getElementById("cartContainer");
+            const cartList = document.getElementById("cartList");
+            const li = document.createElement("li");
+            li.textContent = produkt;
+            cartList.appendChild(li);
+            cartContainer.style.display = "block";
+        }
 
-    agent.classList.add("blink");
-    setTimeout(() => agent.classList.remove("blink"), 300);
+        function läsUpp(text) {
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = "sv-SE";
+            speechSynthesis.speak(utterance);
+        }
 
-    const normalized = input.toLowerCase();
+        function startVoiceRecognition() {
+            if (!('webkitSpeechRecognition' in window)) {
+                alert("Din webbläsare stöder inte röstigenkänning.");
+                return;
+            }
 
-    // Emoji-reaktion
-    if (normalized.includes("arg")) {
-      agent.innerText = "😠";
-    } else if (normalized.includes("ledsen")) {
-      agent.innerText = "😢";
-    } else if (normalized.includes("kul") || normalized.includes("roligt")) {
-      agent.innerText = "😄";
-    } else if (normalized.includes("kram")) {
-      agent.innerText = "🤗";
-    } else {
-      agent.innerText = "🤖";
-    }
+            const recognition = new webkitSpeechRecognition();
+            recognition.lang = "sv-SE";
+            recognition.interimResults = false;
+            recognition.maxAlternatives = 1;
 
-    // Trigger: beställning
-    const beställningsfraser = [
-      "skapa beställning",
-      "jag vill skapa en beställning",
-      "beställning",
-      "jag vill beställa",
-      "göra en beställning",
-      "skapa en order",
-      "ny beställning"
-    ];
+            recognition.onresult = function (event) {
+                const transcript = event.results[0][0].transcript;
+                document.getElementById("orderInput").value = transcript;
+                tolkaBeställning();
+            };
 
-    const match = beställningsfraser.some(fras => normalized.includes(fras));
+            recognition.onerror = function (event) {
+                alert("Kunde inte känna igen röst: " + event.error);
+            };
 
-    if (match) {
-      const svar = "Javisst, jag hjälper dig!";
-      responseBox.innerText = svar;
-
-      const utterance = new SpeechSynthesisUtterance(svar);
-      utterance.lang = "sv-SE";
-      speechSynthesis.speak(utterance);
-
-      setTimeout(() => {
-        const encoded = encodeURIComponent(input);
-        window.location.href = `bestallning.html?fraga=${encoded}`;
-      }, 3000);
-      return;
-    }
-
-    // Standard-svar
-    const svar = "Hmm... det måste jag fundera lite mer på.";
-    responseBox.innerText = svar;
-
-    const utterance = new SpeechSynthesisUtterance(svar);
-    utterance.lang = "sv-SE";
-    speechSynthesis.speak(utterance);
-  }
-
-  function startaTaligenkänning() {
-    if (!('webkitSpeechRecognition' in window)) {
-      alert("Din webbläsare stödjer inte taligenkänning.");
-      return;
-    }
-
-    const recognition = new webkitSpeechRecognition();
-    recognition.lang = "sv-SE";
-    recognition.interimResults = false;
-    recognition.maxAlternatives = 1;
-
-    recognition.onresult = function (event) {
-      const talText = event.results[0][0].transcript;
-      document.getElementById("input").value = talText;
-      ask();
-    };
-
-    recognition.onerror = function (event) {
-      alert("Fel vid taligenkänning: " + event.error);
-    };
-
-    recognition.start();
-  }
-</script>
-
+            recognition.start();
+        }
+    </script>
 </body>
 </html>
-
