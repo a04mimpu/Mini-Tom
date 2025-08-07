@@ -1,100 +1,41 @@
+
+
 <!DOCTYPE html>
 <html lang="sv">
 <head>
   <meta charset="UTF-8" />
   <title>Varukorg</title>
   <style>
-    body {
-      font-family: sans-serif;
-      background-color: #f9fcff;
-      text-align: center;
-      padding: 40px;
-    }
-
-    .container {
-      background: white;
-      padding: 30px;
-      border-radius: 10px;
-      max-width: 600px;
-      margin: auto;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-    }
-
-    #emoji {
-      font-size: 80px;
-      margin: 10px 0;
-    }
-
-    h1 {
-      margin-bottom: 20px;
-    }
-
-    ul {
-      list-style: none;
-      padding: 0;
-    }
-
-    li {
-      font-size: 18px;
-      margin: 10px 0;
-    }
-
-    .green-check {
-      color: green;
-      margin-right: 10px;
-    }
-
-    .mottagare {
-      margin-top: 20px;
-      font-weight: bold;
-      font-size: 16px;
-      color: #333;
-    }
-
-    .cart-icon {
-      font-size: 20px;
-      margin-right: 5px;
-    }
+    body { font-family: sans-serif; padding: 20px; background: #f9fff0; }
+    .agent { font-size: 60px; }
+    .korg { border: 1px solid #ccc; padding: 15px; background: #fff; margin-top: 20px; }
+    .item { margin: 5px 0; }
+    .check { color: green; margin-right: 5px; }
+    .info { font-weight: bold; margin-top: 20px; }
+    .thumb { font-size: 40px; color: green; }
   </style>
 </head>
 <body>
-
-  <div class="container">
-    <div id="emoji">👍</div>
-    <h1>Varukorg</h1>
-
-    <div id="artiklar">
-      <p><span class="cart-icon">🛒</span><strong>Följande artiklar har lagts i din korg:</strong></p>
-      <ul id="artikelLista"></ul>
-    </div>
-
-    <div class="mottagare" id="mottagare">Laddar mottagare...</div>
-  </div>
+  <div class="agent">🤖</div>
+  <h1>Din varukorg</h1>
+  <div class="korg" id="korg-innehall"></div>
+  <div class="info" id="leveransinfo"></div>
+  <div class="thumb">👍</div>
 
   <script>
-    function hämtaFrånURL(param) {
-      return new URLSearchParams(window.location.search).get(param) || "";
-    }
+    const korg = JSON.parse(localStorage.getItem("cartItems")) || ["iPhone 15"];
+    const chef = localStorage.getItem("chef") || "okänd chef";
+    const adress = localStorage.getItem("adress") || "okänd adress";
 
-    const artiklar = hämtaFrånURL("artiklar").split(",");
-    const adress = hämtaFrånURL("adress");
-    const chef = hämtaFrånURL("chef");
+    const korgContainer = document.getElementById("korg-innehall");
+    korgContainer.innerHTML = korg.map(item => `<div class="item"><span class="check">✅</span>${item}</div>`).join("");
 
-    const lista = document.getElementById("artikelLista");
-    artiklar.forEach(artikel => {
-      if (artikel.trim()) {
-        const item = document.createElement("li");
-        item.innerHTML = `<span class="green-check">✅</span>${artikel.trim()}`;
-        lista.appendChild(item);
-      }
-    });
+    const leveransinfo = document.getElementById("leveransinfo");
+    leveransinfo.textContent = `Mottagare: ${chef}, ${adress}`;
 
-    document.getElementById("mottagare").innerText = `Mottagare: ${chef}, ${adress}`;
-
-    const tts = new SpeechSynthesisUtterance("Beställningen är mottagen! Dina varor har lagts i korgen.");
-    tts.lang = "sv-SE";
-    speechSynthesis.speak(tts);
+    const uttal = new SpeechSynthesisUtterance(`Beställningen till ${chef} på ${adress} är redo!`);
+    uttal.lang = "sv-SE";
+    speechSynthesis.speak(uttal);
   </script>
-
 </body>
 </html>
