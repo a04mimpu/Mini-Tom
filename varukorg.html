@@ -1,0 +1,34 @@
+
+
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8">
+  <title>Varukorg</title>
+  <style>
+    body { font-family: sans-serif; text-align: center; background: #fffaf0; padding: 40px; }
+    .box { background: #e0ffe0; border: 2px solid #a0dca0; padding: 20px; margin: 20px auto; width: 60%; border-radius: 10px; }
+    .check { font-size: 40px; color: green; }
+  </style>
+</head>
+<body>
+  <h1>Din varukorg 🛒</h1>
+  <div class="box">
+    <div class="check">✅</div>
+    <div><strong>Produkt:</strong> <span id="produkt">-</span></div>
+  </div>
+
+  <div class="box">
+    <strong>Leverans till:</strong>
+    <div id="chef">-</div>
+    <div id="adress">-</div>
+  </div>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    document.getElementById("produkt").innerText = params.get("produkt") || "-";
+    document.getElementById("chef").innerText = params.get("chef") || "-";
+    document.getElementById("adress").innerText = params.get("adress") || "-";
+  </script>
+</body>
+</html>
