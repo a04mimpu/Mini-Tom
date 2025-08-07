@@ -1,82 +1,46 @@
+
+
 <!DOCTYPE html>
 <html lang="sv">
 <head>
   <meta charset="UTF-8">
   <title>Varukorg</title>
   <style>
-    body {
-      font-family: sans-serif;
-      background-color: #f3f9ff;
-      text-align: center;
-      padding: 40px;
-      max-width: 600px;
-      margin: auto;
-    }
-    .agent {
-      font-size: 80px;
-      margin-bottom: 10px;
-    }
-    .artiklar {
-      margin-top: 20px;
-      font-size: 18px;
-      text-align: left;
-      display: inline-block;
-      background-color: #fff;
-      padding: 15px;
-      border-radius: 8px;
-      box-shadow: 0 0 8px rgba(0,0,0,0.1);
-    }
-    .artiklar li::before {
-      content: '✅ ';
-    }
-    .mottagare {
-      margin-top: 20px;
-      font-weight: bold;
-      font-size: 16px;
-      color: #444;
-    }
+    body { font-family: sans-serif; text-align: center; background: #fffaf0; padding: 40px; }
+    .box { background: #e0ffe0; border: 2px solid #a0dca0; padding: 20px; margin: 20px auto; width: 60%; border-radius: 10px; }
+    .check { font-size: 40px; color: green; }
   </style>
 </head>
 <body>
+  <h1>Din varukorg 🛒</h1>
+  <div class="box">
+    <div class="check">✅</div>
+    <div><strong>Produkt:</strong> <span id="produkt">-</span></div>
+  </div>
 
-  <div class="agent" id="tom">👍</div>
-  <h2>Varukorg</h2>
+  <div class="box">
+    <strong>Leverans till:</strong>
+    <div id="chef">-</div>
+    <div id="adress">-</div>
+  </div>
+<script>
+  // Hämta lagrad data från localStorage
+  const produkter = JSON.parse(localStorage.getItem("produkter")) || [];
+  const chef = localStorage.getItem("mottagareNamn") || "-";
+  const adress = localStorage.getItem("mottagareAdress") || "-";
 
-  <ul class="artiklar" id="artiklar"></ul>
+  // Visa produkterna som lista
+  const produktContainer = document.getElementById("produkt");
+  if (produkter.length > 0) {
+    produktContainer.innerHTML = produkter.map(p => `<div>✅ ${p}</div>`).join("");
+  } else {
+    produktContainer.innerText = "-";
+  }
 
-  <div class="mottagare" id="mottagare"></div>
-
-  <script>
-    function speak(text) {
-      const u = new SpeechSynthesisUtterance(text);
-      u.lang = "sv-SE";
-      speechSynthesis.speak(u);
-    }
-
-    // Hämtar artiklar och mottagare från localStorage
-    const artiklar = JSON.parse(localStorage.getItem("artiklar")) || [];
-    const mottagare = localStorage.getItem("mottagare") || "Okänd mottagare";
-
-    const lista = document.getElementById("artiklar");
-    const mottagareRuta = document.getElementById("mottagare");
-
-    // Visa artiklar
-    if (artiklar.length > 0) {
-      artiklar.forEach(item => {
-        const li = document.createElement("li");
-        li.textContent = item;
-        lista.appendChild(li);
-      });
-      speak("Artiklarna är nu i korgen!");
-    } else {
-      lista.innerHTML = "<li>Inga artiklar tillagda</li>";
-      document.getElementById("tom").innerText = "😕";
-      speak("Jag hittade inga artiklar i korgen.");
-    }
-
-    // Visa mottagare
-    mottagareRuta.textContent = `Mottagare: ${mottagare}`;
-  </script>
+  // Visa mottagare
+  document.getElementById("chef").innerText = chef;
+  document.getElementById("adress").innerText = adress;
+</script>
 
 </body>
 </html>
