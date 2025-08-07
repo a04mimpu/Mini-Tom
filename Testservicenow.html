@@ -51,108 +51,94 @@
   <ul id="cartItems"></ul>
   <div class="suggestions" id="relaterade"></div>
 
-  <script>
-    function tolkaInput(input) {
-      const lower = input.toLowerCase();
-      let produkt = "";
-      let tillbehör = [];
-      let fel = false;
-      let förslag = "";
+<script>
+  function tolkaInput(input) {
+    const lower = input.toLowerCase();
+    let produkt = "";
+    let tillbehör = [];
+    let fel = false;
+    let förslag = "";
 
-      if (lower.includes("iphone 150") || lower.includes("iphone150")) {
-        fel = true;
-        förslag = "iPhone 15";
-      } else if (lower.includes("iphone 15")) {
-        produkt = "iPhone 15";
-        tillbehör = ["Skärmskydd", "MagSafe-laddare", "AirPods"];
-      } else if (lower.includes("airpods")) {
-        produkt = "AirPods Pro";
-        tillbehör = ["Laddningsetui", "Ear tips", "Lightning-kabel"];
-      } else if (lower.includes("galaxy s24")) {
-        produkt = "Samsung Galaxy S24";
-        tillbehör = ["Skal", "Trådlös laddare", "Galaxy Buds"];
-      } else {
-        fel = true;
-      }
-
-      return { produkt, tillbehör, fel, förslag };
+    if (lower.includes("iphone 150") || lower.includes("iphone150")) {
+      fel = true;
+      förslag = "iPhone 15";
+    } else if (lower.includes("iphone 15")) {
+      produkt = "iPhone 15";
+      tillbehör = ["Skärmskydd", "MagSafe-laddare", "AirPods"];
+    } else if (lower.includes("airpods")) {
+      produkt = "AirPods Pro";
+      tillbehör = ["Laddningsetui", "Ear tips", "Lightning-kabel"];
+    } else if (lower.includes("galaxy s24")) {
+      produkt = "Samsung Galaxy S24";
+      tillbehör = ["Skal", "Trådlös laddare", "Galaxy Buds"];
+    } else {
+      fel = true;
     }
 
-    function extractChefOchAdress(input) {
-      const chefMatch = input.match(/chef\s+([a-zåäö\s\-]+)/i);
-      const adressMatch = input.match(/(?:,|^)\s*([^,]+gatan\s*\d+)/i);
-
-      const chef = chefMatch ? chefMatch[1].trim() : "Okänd chef";
-      const adress = adressMatch ? adressMatch[1].trim() : "Okänd adress";
-      return { chef, adress };
-    }
-
-    function tolkaBeställning() {
-      const input = document.getElementById("beskrivning").value;
-      const { produkt, tillbehör, fel, förslag } = tolkaInput(input);
-      const emoji = document.getElementById("tom-emoji");
-      const feedback = document.getElementById("feedback");
-      const cart = document.getElementById("cartItems");
-      const relaterade = document.getElementById("relaterade");
-
-      window.speechSynthesis.cancel();
-
-      if (fel) {
-        emoji.innerText = "😠";
-        feedback.innerText = "Men vad gör du nu?" + (förslag ? " Menade du " + förslag + "?" : "");
-        const felTal = new SpeechSynthesisUtterance("Men vad gör du nu?" + (förslag ? " Menade du " + förslag + "?" : ""));
-        felTal.lang = "sv-SE";
-        window.speechSynthesis.speak(felTal);
-        relaterade.innerHTML = "";
-        cart.innerHTML = "";
-        return;
-      }
-
-      emoji.innerText = "😄";
-      feedback.innerText = `Jag lade ${produkt} och tillbehör i varukorgen.`;
-
-      const svar = new SpeechSynthesisUtterance(`Javisst! Jag lade till ${produkt} och tillbehören.`);
-      svar.lang = "sv-SE";
-      window.speechSynthesis.speak(svar);
-
-      const items = [`${produkt}`, ...tillbehör];
-      cart.innerHTML = "";
-      items.forEach(item => {
-        const li = document.createElement("li");
-        li.classList.add("cart-item");
-        li.textContent = item;
-        cart.appendChild(li);
-      });
-
-     
-function tolkaOchSkicka() {
-  const input = document.getElementById("beskrivning").value;
-  const { produkt, tillbehör, fel } = tolkaInput(input);
-  const { chef, adress } = extractChefOchAdress(input);
-
-  if (fel) {
-    alert("Tom kunde inte förstå beställningen.");
-    return;
+    return { produkt, tillbehör, fel, förslag };
   }
 
-  // Spara i localStorage
-  localStorage.setItem("produkter", JSON.stringify([produkt, ...tillbehör]));
-  localStorage.setItem("mottagareNamn", chef);
-  localStorage.setItem("mottagareAdress", adress);
+  function extractChefOchAdress(input) {
+    const chefMatch = input.match(/chef\s+([a-zåäö\s\-]+)/i);
+    const adressMatch = input.match(/(?:,|^)\s*([^,]+gatan\s*\d+)/i);
 
-  // Skapa talsyntes
-  const tal = new SpeechSynthesisUtterance("Jag lägger allt i varukorgen och skickar dig vidare.");
-  tal.lang = "sv-SE";
+    const chef = chefMatch ? chefMatch[1].trim() : "Okänd chef";
+    const adress = adressMatch ? adressMatch[1].trim() : "Okänd adress";
+    return { chef, adress };
+  }
 
-  // När talet är klart, gå till varukorg
-  tal.onend = () => {
-    window.location.href = "varukorg.html";
-  };
+  function tolkaOchSkicka() {
+    const input = document.getElementById("beskrivning").value;
+    const { produkt, tillbehör, fel, förslag } = tolkaInput(input);
+    const emoji = document.getElementById("tom-emoji");
+    const feedback = document.getElementById("feedback");
+    const cart = document.getElementById("cartItems");
+    const relaterade = document.getElementById("relaterade");
+    const { chef, adress } = extractChefOchAdress(input);
 
-  speechSynthesis.cancel();
-  speechSynthesis.speak(tal);
-}
-  </script>
+    speechSynthesis.cancel();
+
+    if (fel) {
+      emoji.innerText = "😠";
+      feedback.innerText = "Men vad gör du nu?" + (förslag ? " Menade du " + förslag + "?" : "");
+      const felTal = new SpeechSynthesisUtterance("Men vad gör du nu?" + (förslag ? " Menade du " + förslag + "?" : ""));
+      felTal.lang = "sv-SE";
+      speechSynthesis.speak(felTal);
+      relaterade.innerHTML = "";
+      cart.innerHTML = "";
+      return;
+    }
+
+    emoji.innerText = "😄";
+    feedback.innerText = `Jag lade ${produkt} och tillbehör i varukorgen.`;
+
+    const svar = new SpeechSynthesisUtterance(`Javisst! Jag lade till ${produkt} och tillbehören.`);
+    svar.lang = "sv-SE";
+    speechSynthesis.speak(svar);
+
+    const items = [`${produkt}`, ...tillbehör];
+    cart.innerHTML = "";
+    items.forEach(item => {
+      const li = document.createElement("li");
+      li.classList.add("cart-item");
+      li.textContent = item;
+      cart.appendChild(li);
+    });
+
+    relaterade.innerHTML = ""; // Inte dubbla listor
+
+    // Spara i localStorage
+    localStorage.setItem("produkter", JSON.stringify([produkt, ...tillbehör]));
+    localStorage.setItem("mottagareNamn", chef);
+    localStorage.setItem("mottagareAdress", adress);
+
+    // Gå till nästa sida när talsyntesen är klar
+    svar.onend = () => {
+      window.location.href = "varukorg.html";
+    };
+  }
+</script>
+
 
 </body>
 </html>
