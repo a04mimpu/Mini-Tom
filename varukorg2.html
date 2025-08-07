@@ -153,20 +153,21 @@
       </div>
 
       <div>
-        <strong>Säg:</strong> "Skicka mejl" eller klicka nedan<br>
-        <button onclick="visaFaktura()">🧠 Prata med Tom</button>
-      </div>
 
-      <div id="voiceStatus">🎤 Tom lyssnar...</div>
+<div class="voice-box">
+      <p><strong>Säg:</strong> "Visa mig fakturan" eller "Skicka mejl"</p>
+      <button class="btn" onclick="startListening()">🎤 Prata med Tom</button>
     </div>
   </div>
 
-  <!-- Faktura-popup -->
-  <div id="fakturaModal">
-    <h3>Faktura</h3>
-    <p>Fakturan gäller beställning #3471<br>
-    Summa: 4 289 kr<br>
-    Förfallodatum: 2025-09-01</p>
+  <!-- Fakturaruta -->
+  <div id="invoiceModal" class="invoice-modal">
+    <h2>Faktura</h2>
+    <p>Fakturan gäller beställning #3471</p>
+    <p>Summa: 4 289 kr</p>
+    <p>Förfallodatum: 2025-09-01</p>
+    <button onclick="document.getElementById('invoiceModal').style.display='none'" class="btn">Stäng</button
+
     <button onclick="stängFaktura()">Stäng</button>
   </div>
 
