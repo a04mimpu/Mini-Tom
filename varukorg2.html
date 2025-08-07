@@ -179,47 +179,31 @@
     document.getElementById("chef").innerText = chef;
     document.getElementById("adress").innerText = adress;
 
-    // 🗣️ Tom pratar
-    const tts = new SpeechSynthesisUtterance(
-      `Jag har lagt ${produkter.join(", ")} i korgen. Leveransen går till ${adress}, till ${chef}.`
+  // 🗣️ Robot-Tom pratar
+    const tal = new SpeechSynthesisUtterance(
+      `Här är din varukorg: ${produkter.join(", ")}. 
+      Leverans sker till ${adress}. 
+      Jag skickar nu ett mejl till mottagande chef, ${chef}.`
     );
-    tts.lang = "sv-SE";
-    speechSynthesis.speak(tts);
+    tal.lang = "sv-SE";
+    tal.pitch = 1.1;
+    tal.rate = 1;
 
-    // 🎤 Röstigenkänning
-    window.SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    const recognition = new SpeechRecognition();
-    recognition.lang = "sv-SE";
-    recognition.continuous = false;
-
-    recognition.onresult = (event) => {
-      const transcript = event.results[0][0].transcript.toLowerCase();
-      document.getElementById("voiceStatus").innerText = `📢 Du sa: "${transcript}"`;
-
-      if (transcript.includes("skicka mejl")) {
-        const tts2 = new SpeechSynthesisUtterance(`Jag skickar mejlet nu till ${chef}`);
-        tts2.lang = "sv-SE";
-        speechSynthesis.speak(tts2);
-        setTimeout(öppnaOutlookMejl, 2000);
-      }
-
-      if (transcript.includes("visa fakturan")) {
-        visaFaktura();
-      }
+    // När han pratat klart: öppna Outlook
+    tal.onend = () => {
+      öppnaOutlookMejl();
     };
 
-    recognition.onerror = () => {
-      document.getElementById("voiceStatus").innerText = "⚠️ Något gick fel med röstigenkänningen.";
-    };
+    speechSynthesis.cancel(); // Avbryt pågående tal
+    speechSynthesis.speak(tal);
 
-    recognition.start();
-
+    // 📧 Öppna färdigifyllt mejl
     function öppnaOutlookMejl() {
       const email = chef
         .toLowerCase()
         .replace(/[åä]/g, 'a')
         .replace(/ö/g, 'o')
-        .replace(/\s+/g, '.') + "@example.se";
+        .replace(/\s+/g, '.') + "@exempel.se";
 
       const subject = encodeURIComponent("Beställning från Tom");
       const body = encodeURIComponent(
@@ -228,15 +212,6 @@
 
       window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
     }
-
-    function visaFaktura() {
-      document.getElementById("fakturaModal").style.display = "block";
-    }
-
-    function stängFaktura() {
-      document.getElementById("fakturaModal").style.display = "none";
-    }
   </script>
-
 </body>
 </html>
