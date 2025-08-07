@@ -1,172 +1,144 @@
+
 <!DOCTYPE html>
 <html lang="sv">
 <head>
-  <meta charset="UTF-8">
-  <title>Mini-Tom – Beställning</title>
+  <meta charset="UTF-8" />
+  <title>Mini-Tom – Beställningshjälp</title>
   <style>
     body {
       font-family: sans-serif;
-      text-align: center;
-      margin: 50px auto;
       background-color: #f3f9ff;
-      max-width: 600px;
+      text-align: center;
+      padding: 30px;
     }
     input, button {
       padding: 10px;
       font-size: 16px;
-      width: 80%;
       margin: 10px auto;
       display: block;
+      width: 80%;
+    }
+    #feedback, .suggestions {
+      margin-top: 15px;
+      font-size: 14px;
     }
     .agent {
-      font-size: 80px;
-      margin-bottom: 10px;
+      font-size: 100px;
+      transition: 0.3s ease;
     }
-    .cart {
-      margin-top: 30px;
-      text-align: left;
-      background: #fff;
-      padding: 15px;
-      border-radius: 8px;
-      box-shadow: 0 0 5px rgba(0,0,0,0.1);
+    #cart {
+      background-color: #fff;
+      margin-top: 20px;
+      padding: 10px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      max-width: 400px;
+      margin-left: auto;
+      margin-right: auto;
     }
-    .cart h2 {
-      text-align: center;
-    }
-    .cart ul {
-      list-style: none;
-      padding-left: 0;
-    }
-    .cart li::before {
-      content: "✅ ";
+    .cart-item::before {
+      content: '✅ ';
       color: green;
-    }
-    .mic-button {
-      background: #fff;
-      border: 2px solid #aaa;
-      border-radius: 50%;
-      width: 50px;
-      height: 50px;
-      font-size: 24px;
-      margin: 0 auto 20px;
-      cursor: pointer;
-    }
-    .sad {
-      color: red;
     }
   </style>
 </head>
 <body>
 
-  <div class="agent" id="emoji">🤖</div>
-
+  <div class="agent" id="tom-emoji">🤖</div>
   <h1>Mini-Toms Beställningshjälp</h1>
-
-  <!-- 🎤 Mikrofonknapp -->
-  <button class="mic-button" onclick="startaRöst()">
-    🎤
-  </button>
-  <p>Säg eller skriv vad du vill beställa</p>
 
   <input type="text" id="userInput" placeholder="Ex: Jag vill beställa en iPhone 15" />
   <button onclick="tolkaBeställning()">Tolka</button>
+  <button onclick="startSpeech()">🎤 Säg din beställning</button>
 
-  <div class="cart" id="varukorg" style="display:none;">
-    <h2>🛒 Varukorg</h2>
+  <div id="feedback"></div>
+  <div class="suggestions" id="relaterade"></div>
+
+  <div id="cart">
+    <h3>🛒 Varukorg</h3>
     <ul id="cartItems"></ul>
   </div>
 
-  <script>
-    const emoji = document.getElementById("emoji");
-    const cartBox = document.getElementById("varukorg");
-    const cartList = document.getElementById("cartItems");
+<script>
+function tolkaInput(input) {
+  const lower = input.toLowerCase();
+  let produkt = "";
+  let tillbehör = [];
+  let fel = false;
+  let förslag = "";
 
-    function tolkaInput(input) {
-      const lower = input.toLowerCase();
-      if (lower.includes("iphone 15")) {
-        return {
-          produkt: "iPhone 15",
-          tillbehör: ["Skärmskydd", "MagSafe-laddare", "AirPods"],
-          fel: false
-        };
-      } else if (lower.includes("airpods")) {
-        return {
-          produkt: "AirPods Pro",
-          tillbehör: ["Laddningsetui", "Ear tips", "Lightning-kabel"],
-          fel: false
-        };
-      } else if (lower.includes("galaxy s24")) {
-        return {
-          produkt: "Samsung Galaxy S24",
-          tillbehör: ["Skal", "Trådlös laddare", "Galaxy Buds"],
-          fel: false
-        };
-      } else {
-        return { fel: true };
-      }
-    }
+  if (
+    lower.includes("iphone 150") ||
+    lower.includes("iphone150") ||
+    lower.includes("i phone 150")
+  ) {
+    fel = true;
+    förslag = "iPhone 15";
+  } else if (lower.includes("iphone 15")) {
+    produkt = "iPhone 15";
+    tillbehör = ["Skärmskydd", "MagSafe-laddare", "AirPods"];
+  } else if (lower.includes("airpods")) {
+    produkt = "AirPods Pro";
+    tillbehör = ["Laddningsetui", "Ear tips", "Lightning-kabel"];
+  } else if (lower.includes("galaxy s24")) {
+    produkt = "Samsung Galaxy S24";
+    tillbehör = ["Skal", "Trådlös laddare", "Galaxy Buds"];
+  } else {
+    fel = true;
+  }
 
-    function visaFelmeddelande() {
-      emoji.innerText = "😠";
-      emoji.classList.add("sad");
-      tal("Men vad gör du nu?");
-    }
+  return { produkt, tillbehör, fel, förslag };
+}
 
-    function läggTillIVarukorg(produkt, tillbehör) {
-      cartList.innerHTML = ""; // Töm först
-      const alla = [produkt, ...tillbehör];
-      alla.forEach(item => {
-        const li = document.createElement("li");
-        li.innerText = item;
-        cartList.appendChild(li);
-      });
-      cartBox.style.display = "block";
-    }
+function tolkaBeställning() {
+  const input = document.getElementById("userInput").value;
+  const { produkt, tillbehör, fel, förslag } = tolkaInput(input);
+  const emoji = document.getElementById("tom-emoji");
+  const feedback = document.getElementById("feedback");
+  const cart = document.getElementById("cartItems");
+  const relaterade = document.getElementById("relaterade");
 
-    function tal(text) {
-      const utter = new SpeechSynthesisUtterance(text);
-      utter.lang = "sv-SE";
-      speechSynthesis.speak(utter);
-    }
+  if (fel) {
+    emoji.innerText = "😠";
+    feedback.innerText = "Men vad gör du nu?" + (förslag ? " Menade du " + förslag + "?" : "");
+    speechSynthesis.cancel();
+    const felTal = new SpeechSynthesisUtterance("Men vad gör du nu?");
+    felTal.lang = "sv-SE";
+    speechSynthesis.speak(felTal);
+    relaterade.innerHTML = "";
+    return; // STOPPA om fel
+  }
 
-    function tolkaBeställning() {
-      const input = document.getElementById("userInput").value;
-      const resultat = tolkaInput(input);
+  emoji.innerText = "😄";
+  feedback.innerText = `Jag lade ${produkt} och tillbehör i varukorgen.`;
 
-      if (resultat.fel) {
-        visaFelmeddelande();
-        return;
-      }
+  speechSynthesis.cancel();
+  const svar = new SpeechSynthesisUtterance(`Javisst! Jag lade till ${produkt} och tillbehören.`);
+  svar.lang = "sv-SE";
+  speechSynthesis.speak(svar);
 
-      emoji.innerText = "😄";
-      emoji.classList.remove("sad");
-      läggTillIVarukorg(resultat.produkt, resultat.tillbehör);
-      tal("Javisst, jag hjälper dig! Jag har lagt till det i varukorgen.");
-    }
+  const items = [`${produkt}`, ...tillbehör];
+  cart.innerHTML = "";
+  items.forEach(item => {
+    const li = document.createElement("li");
+    li.classList.add("cart-item");
+    li.textContent = item;
+    cart.appendChild(li);
+  });
 
-    // 🎤 Mikrofonfunktion
-    function startaRöst() {
-      if (!('webkitSpeechRecognition' in window)) {
-        alert("Din webbläsare stödjer inte röstigenkänning.");
-        return;
-      }
+  relaterade.innerHTML = "<strong>Relaterade artiklar:</strong><br>• " + tillbehör.join("<br>• ");
+}
 
-      const recognition = new webkitSpeechRecognition();
-      recognition.lang = "sv-SE";
-      recognition.interimResults = false;
+function startSpeech() {
+  const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+  recognition.lang = "sv-SE";
+  recognition.onresult = function (event) {
+    document.getElementById("userInput").value = event.results[0][0].transcript;
+    tolkaBeställning();
+  };
+  recognition.start();
+}
+</script>
 
-      recognition.onresult = (event) => {
-        const text = event.results[0][0].transcript;
-        document.getElementById("userInput").value = text;
-        tolkaBeställning();
-      };
-
-      recognition.onerror = () => {
-        tal("Jag hörde inte riktigt. Vill du försöka igen?");
-      };
-
-      recognition.start();
-    }
-  </script>
 </body>
 </html>
