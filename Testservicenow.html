@@ -21,6 +21,7 @@
 
     .emoji {
       font-size: 64px;
+      transition: transform 0.3s;
     }
 
     #felmeddelande {
@@ -31,7 +32,7 @@
   </style>
 </head>
 <body>
-  <div class="emoji">🤖</div>
+  <div class="emoji" id="tomEmoji">🤖</div>
   <h1>TestServiceNow</h1>
 
   <!-- Förifyllda fält -->
@@ -44,6 +45,15 @@
   <p id="felmeddelande">😡 Men vad gör du nu? Alla fält måste fyllas i!</p>
 
   <script>
+    function tala(text, emoji = "🤖") {
+      const tom = document.getElementById("tomEmoji");
+      tom.innerText = emoji;
+
+      const röst = new SpeechSynthesisUtterance(text);
+      röst.lang = "sv-SE";
+      speechSynthesis.speak(röst);
+    }
+
     function tolkaOchSkicka() {
       const produkt = document.getElementById("produkt").value.trim();
       const chef = document.getElementById("chef").value.trim();
@@ -51,15 +61,24 @@
 
       if (!produkt || !chef || !adress) {
         document.getElementById("felmeddelande").style.display = "block";
+        tala("Men vad gör du nu?", "😠");
         return;
       }
 
-      // Beskrivningen är vad som normalt syns i ServiceNow
+      document.getElementById("felmeddelande").style.display = "none";
+
+      // Beskrivning som Tom tolkar
       const beskrivning = `${produkt}, ${chef}, ${adress}`;
 
-      // Skicka med data till nästa sida (varukorg.html)
-      const url = `varukorg.html?produkt=${encodeURIComponent(produkt)}&chef=${encodeURIComponent(chef)}&adress=${encodeURIComponent(adress)}&beskrivning=${encodeURIComponent(beskrivning)}`;
-      window.location.href = url;
+      // Tom pratar
+      tala("Javisst! Jag lägger varorna i korgen och skickar vidare.", "😄");
+
+      // Vänta på att han pratat klart innan redirect
+      const väntetid = 3500; // ms
+      setTimeout(() => {
+        const url = `varukorg.html?produkt=${encodeURIComponent(produkt)}&chef=${encodeURIComponent(chef)}&adress=${encodeURIComponent(adress)}&beskrivning=${encodeURIComponent(beskrivning)}`;
+        window.location.href = url;
+      }, väntetid);
     }
   </script>
 </body>
