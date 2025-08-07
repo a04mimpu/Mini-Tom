@@ -33,7 +33,7 @@
 
     // Visa produkter
     const produktContainer = document.getElementById("produkt");
-    produktContainer.innerHTML = artiklar.length > 0 ? artiklar.map(p => `✅ ${p}`).join("<br>") : "-";
+    produktContainer.innerHTML = produkter.length > 0 ? produkter.map(p => `✅ ${p}`).join("<br>") : "-";
 
     // Visa leveransinfo
     document.getElementById("chef").innerText = chef;
