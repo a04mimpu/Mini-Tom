@@ -1,5 +1,3 @@
-
-
 <!DOCTYPE html>
 <html lang="sv">
 <head>
@@ -9,10 +7,14 @@
     body { font-family: sans-serif; text-align: center; background: #fffaf0; padding: 40px; }
     .box { background: #e0ffe0; border: 2px solid #a0dca0; padding: 20px; margin: 20px auto; width: 60%; border-radius: 10px; }
     .check { font-size: 40px; color: green; }
+    .tom { font-size: 70px; margin-top: 20px; }
   </style>
 </head>
 <body>
   <h1>Din varukorg 🛒</h1>
+
+  <div id="tom" class="tom">🤖</div>
+
   <div class="box">
     <div class="check">✅</div>
     <div><strong>Produkt:</strong> <span id="produkt">-</span></div>
@@ -23,24 +25,30 @@
     <div id="chef">-</div>
     <div id="adress">-</div>
   </div>
-<script>
-  // Hämta lagrad data från localStorage
-  const produkter = JSON.parse(localStorage.getItem("produkter")) || [];
-  const chef = localStorage.getItem("mottagareNamn") || "-";
-  const adress = localStorage.getItem("mottagareAdress") || "-";
 
-  // Visa produkterna som lista
-  const produktContainer = document.getElementById("produkt");
-  if (produkter.length > 0) {
-    produktContainer.innerHTML = produkter.map(p => `<div>✅ ${p}</div>`).join("");
-  } else {
-    produktContainer.innerText = "-";
-  }
+  <script>
+    const produkter = JSON.parse(localStorage.getItem("produkter")) || [];
+    const chef = localStorage.getItem("mottagareNamn") || "-";
+    const adress = localStorage.getItem("mottagareAdress") || "-";
 
-  // Visa mottagare
-  document.getElementById("chef").innerText = chef;
-  document.getElementById("adress").innerText = adress;
-</script>
+    // Visa produkter
+    const produktContainer = document.getElementById("produkt");
+    produktContainer.innerHTML = produkter.length > 0 ? produkter.map(p => `✅ ${p}`).join("<br>") : "-";
 
+    // Visa leveransinfo
+    document.getElementById("chef").innerText = chef;
+    document.getElementById("adress").innerText = adress;
+
+    // Tom pratar automatiskt efter laddning
+    const ttsText = `Jag har lagt ${produkter.join(", ")} i din varukorg. Leverans sker till ${chef} på ${adress}.`;
+    
+    const tom = new SpeechSynthesisUtterance(ttsText);
+    tom.lang = "sv-SE"; // Svensk röst
+    tom.rate = 1;       // Prathastighet
+    tom.pitch = 1;      // Tonläge
+    tom.volume = 1;     // Volym
+
+    window.speechSynthesis.speak(tom);
+  </script>
 </body>
 </html>
