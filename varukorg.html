@@ -10,7 +10,7 @@
       background-color: #f9f9f9;
     }
 
-    /* Toppraden lik Visma Proceedo */
+    /* Topprad som Visma Proceedo */
     .topbar {
       background-color: #0066a1;
       color: white;
@@ -29,15 +29,20 @@
       text-decoration: underline;
     }
 
-    .topbar .cart {
-      margin-left: auto;
-      font-size: 22px;
-    }
-
     /* Innehåll */
     .container {
       padding: 40px;
       text-align: center;
+    }
+
+    .header {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      font-size: 28px;
+      font-weight: bold;
+      margin-bottom: 30px;
     }
 
     .cart-box {
@@ -65,6 +70,9 @@
       font-size: 16px;
     }
 
+    .emoji-cart {
+      font-size: 32px;
+    }
   </style>
 </head>
 <body>
@@ -76,12 +84,14 @@
     <span>Alla beställningar</span>
     <span>Fakturor</span>
     <span>Uppföljning</span>
-    <div class="cart">🛒</div>
   </div>
 
   <!-- Innehåll -->
   <div class="container">
-    <h1>Din varukorg</h1>
+    <div class="header">
+      <span>Din varukorg</span> <span class="emoji-cart">🛒</span>
+    </div>
+
     <div class="cart-box" id="cart">
       <div class="cart-item check"><strong>✅ Produkter:</strong></div>
       <div id="produkter"></div>
@@ -105,7 +115,6 @@
     document.getElementById("chef").innerText = chef;
     document.getElementById("adress").innerText = adress;
 
-    // Tom läser upp varukorgen
     const tal = new SpeechSynthesisUtterance(
       `Jag har lagt ${produkter.join(", ")} i varukorgen. Leverans går till ${chef} på ${adress}.`
     );
