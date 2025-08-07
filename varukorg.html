@@ -2,161 +2,150 @@
 <html lang="sv">
 <head>
   <meta charset="UTF-8">
-  <title>Varukorg</title>
+  <title>Tom - Röststyrd meny</title>
   <style>
     body {
       margin: 0;
       font-family: "Segoe UI", sans-serif;
-      background: #fffaf0;
+      display: flex;
     }
 
-    /* Menyrad */
-    .top-nav {
+    .sidebar {
+      width: 280px;
+      background: #4CAF50;
+      height: 100vh;
+      padding-top: 20px;
+      color: white;
+      position: fixed;
+      left: 0;
+      top: 0;
+      box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+    }
+
+    .sidebar-header {
+      font-size: 20px;
+      font-weight: bold;
+      padding: 15px 20px;
+      background-color: #3b9441;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      background-color: #0069aa;
-      padding: 10px 20px;
-      color: white;
     }
 
-    .nav-left, .nav-right {
-      display: flex;
-      align-items: center;
-    }
-
-    .nav-left div {
-      margin-right: 25px;
-      cursor: pointer;
-    }
-
-    .nav-left div:hover {
-      text-decoration: underline;
-    }
-
-    .nav-right img {
-      width: 24px;
-      height: 24px;
-    }
-
-    h1 {
-      text-align: center;
-      margin-top: 40px;
-      font-size: 28px;
-    }
-
-    .cart-icon {
-      vertical-align: middle;
-      margin-right: 10px;
-    }
-
-    .box {
-      background: #e0ffe0;
-      border: 2px solid #a0dca0;
-      padding: 20px;
-      margin: 20px auto;
-      width: 60%;
-      border-radius: 10px;
-      font-size: 18px;
-    }
-
-    .check {
-      font-size: 30px;
-      color: green;
-      margin-bottom: 10px;
-    }
-
-    .info-line {
-      margin-top: 10px;
+    .badge {
+      background: white;
+      color: #3b9441;
       font-weight: bold;
+      border-radius: 12px;
+      padding: 2px 10px;
+      font-size: 14px;
+    }
+
+    .menu-item {
+      padding: 14px 20px;
+      border-top: 1px solid rgba(255,255,255,0.2);
+      display: flex;
+      justify-content: space-between;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .menu-item:hover {
+      background-color: rgba(255, 255, 255, 0.1);
+    }
+
+    .count {
+      font-weight: bold;
+      background: rgba(255,255,255,0.2);
+      padding: 2px 8px;
+      border-radius: 10px;
+    }
+
+    .highlight {
+      border: 1px solid white;
+      background: transparent;
+    }
+
+    .content {
+      margin-left: 300px;
+      padding: 30px;
+    }
+
+    #status {
+      margin-top: 20px;
+      font-size: 18px;
+      color: #333;
     }
   </style>
 </head>
 <body>
 
-  <!-- Menyrad -->
-  <div class="top-nav">
-    <div class="nav-left">
-      <div>Visma Proceedo</div>
-      <div>Inköp</div>
-      <div>Alla beställningar</div>
-      <div>Fakturor</div>
-      <div>Uppföljning</div>
+  <div class="sidebar">
+    <div class="sidebar-header">
+      Att hantera <span class="badge">21</span>
     </div>
-    <div class="nav-right">
-      <img src="https://cdn-icons-png.flaticon.com/512/1170/1170678.png" alt="Varukorg">
-    </div>
+    <div class="menu-item" id="godkanna">Beställningar att godkänna <span class="count">0</span></div>
+    <div class="menu-item" id="ejskickade">Ej skickade beställningar <span class="count">0</span></div>
+    <div class="menu-item" id="fakturor">Fakturor <span class="count">1</span></div>
+    <div class="menu-item" id="leveranser">Leveranser och order <span class="count highlight">20</span></div>
+    <div class="menu-item" id="varukorgar">Varukorgar <span class="count">0</span></div>
   </div>
 
-  <!-- Rubrik med ikon -->
-  <h1><img class="cart-icon" src="https://cdn-icons-png.flaticon.com/512/1170/1170678.png" alt="Varukorg" width="30">Din varukorg</h1>
-
-  <!-- Produkter -->
-  <div class="box">
-    <div class="check">✅</div>
-    <div><strong>Produkt(er):</strong></div>
-    <div id="produkt">-</div>
-  </div>
-
-  <!-- Leveransinformation -->
-  <div class="box">
-    <strong>Leverans till:</strong>
-    <div class="info-line" id="chef">-</div>
-    <div id="adress">-</div>
+  <div class="content">
+    <h1>Hej! Jag är Tom 🤖</h1>
+    <p>Prata med mig! Exempel: <strong>"Visa mig fakturan"</strong></p>
+    <p id="status">🎙️ Jag lyssnar...</p>
   </div>
 
   <script>
-    // Hämta data från localStorage
-    const produkter = JSON.parse(localStorage.getItem("produkter")) || [];
-    const chef = localStorage.getItem("mottagareNamn") || "Okänd chef";
-    const adress = localStorage.getItem("mottagareAdress") || "Okänd adress";
-
-    // Visa produkterna
-    const produktEl = document.getElementById("produkt");
-    if (produkter.length > 0) {
-      produktEl.innerHTML = produkter.map(p => `✅ ${p}`).join("<br>");
-    } else {
-      produktEl.innerText = "-";
-    }
-
-    // Visa chef och adress
-    document.getElementById("chef").innerText = chef;
-    document.getElementById("adress").innerText = adress;
-
-    // 🗣️ Robot-Tom pratar och öppnar mejl
-    const tts = new SpeechSynthesisUtterance();
-    tts.lang = "sv-SE";
-    tts.pitch = 1.1;
-    tts.rate = 1;
-
-    if (produkter.length > 0) {
-      tts.text = `Jag har lagt ${produkter.join(", ")} i korgen. Leveransen går till ${chef} på ${adress}. Jag skickar nu ett mejl till mottagande chef.`;
-    } else {
-      tts.text = "Inga produkter har lagts i korgen.";
-    }
-
-    tts.onend = () => {
-      öppnaOutlookMejl();
+    const speak = (text) => {
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = "sv-SE";
+      speechSynthesis.speak(utterance);
     };
 
-    window.speechSynthesis.cancel();
-    window.speechSynthesis.speak(tts);
+    const handleCommand = (transcript) => {
+      transcript = transcript.toLowerCase();
 
-    // Öppna Outlook med färdigt mejl
-    function öppnaOutlookMejl() {
-      const email = chef
-        .toLowerCase()
-        .replace(/[åä]/g, 'a')
-        .replace(/ö/g, 'o')
-        .replace(/\s+/g, '.') + "@exempel.se";
+      if (transcript.includes("faktura")) {
+        const antal = parseInt(document.querySelector('#fakturor .count').innerText);
+        if (antal > 0) {
+          speak("Jag ser att du har en faktura. Jag öppnar den nu.");
+          alert("👉 Tom öppnar fakturan!");
+          // window.location.href = "fakturor.html";
+        } else {
+          speak("Du har inga fakturor att visa just nu.");
+        }
+      } else if (transcript.includes("leverans")) {
+        const antal = parseInt(document.querySelector('#leveranser .count').innerText);
+        if (antal > 0) {
+          speak("Jag ser att du har leveranser och order. Jag visar dem nu.");
+          alert("👉 Tom öppnar leveranser och order!");
+        } else {
+          speak("Det finns inga leveranser just nu.");
+        }
+      } else {
+        speak("Jag förstod inte riktigt vad du menade. Vill du visa en faktura eller leverans?");
+      }
+    };
 
-      const subject = encodeURIComponent("Beställning från Tom");
-      const body = encodeURIComponent(
-        `Hej ${chef},\n\nFöljande produkter har beställts:\n\n- ${produkter.join("\n- ")}\n\nLeveransadress:\n${adress}\n\nVänliga hälsningar,\nTom – AI-assistent`
-      );
+    const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+    recognition.lang = "sv-SE";
+    recognition.interimResults = false;
+    recognition.continuous = true;
 
-      window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
-    }
+    recognition.onresult = function(event) {
+      const transcript = event.results[event.results.length - 1][0].transcript;
+      document.getElementById("status").innerText = `🎤 Du sa: "${transcript}"`;
+      handleCommand(transcript);
+    };
+
+    recognition.onerror = function(event) {
+      document.getElementById("status").innerText = "🚫 Fel vid röstigenkänning: " + event.error;
+    };
+
+    recognition.start();
   </script>
+
 </body>
 </html>
