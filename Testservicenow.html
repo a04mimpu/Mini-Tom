@@ -1,4 +1,11 @@
 <body>
+  <div class="agent" id="tom-emoji">🤖</div>
+  <h1>Toms Beställningshjälp</h1>
+  <button onclick="tolkaBeställning()">Tolka</button>
+  <button onclick="startSpeech()">🎤 Säg din beställning</button>
+
+  <div id="feedback"></div>
+  <div class="suggestions" id="relaterade"></div>
   <textarea id="beskrivning" rows="4" cols="50">iPhone 15, Gatan 2, mottagande chef Anna-Lena Larsson</textarea>
   <br>
   <button onclick="tolkaOchSkicka()">Tolka & Gå vidare</button>
@@ -45,14 +52,6 @@
   </style>
 </head>
 <body>
-
-  <div class="agent" id="tom-emoji">🤖</div>
-  <h1>Toms Beställningshjälp</h1>
-  <button onclick="tolkaBeställning()">Tolka</button>
-  <button onclick="startSpeech()">🎤 Säg din beställning</button>
-
-  <div id="feedback"></div>
-  <div class="suggestions" id="relaterade"></div>
 
 <script>
 function tolkaInput(input) {
