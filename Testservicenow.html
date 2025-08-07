@@ -1,18 +1,8 @@
-<body>
-  <div class="agent" id="tom-emoji">🤖</div>
-  <h1>Toms Beställningshjälp</h1>
-  <button onclick="tolkaBeställning()">Tolka</button>
-  <button onclick="startSpeech()">🎤 Säg din beställning</button>
-
-  <div id="feedback"></div>
-  <div class="suggestions" id="relaterade"></div>
-  <textarea id="beskrivning" rows="4" cols="50">iPhone 15, Gatan 2, mottagande chef Anna-Lena Larsson</textarea>
-  <br>
-  <button onclick="tolkaOchSkicka()">Tolka & Gå vidare</button>
 <!DOCTYPE html>
 <html lang="sv">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
+  <title>Toms Beställningshjälp</title>
   <style>
     body {
       font-family: sans-serif;
@@ -20,7 +10,7 @@
       text-align: center;
       padding: 30px;
     }
-    input, button {
+    input, button, textarea {
       padding: 10px;
       font-size: 16px;
       margin: 10px auto;
@@ -53,86 +43,41 @@
 </head>
 <body>
 
-<script>
-function tolkaInput(input) {
-  const lower = input.toLowerCase();
-  let produkt = "";
-  let tillbehör = [];
-  let fel = false;
-  let förslag = "";
+  <div class="agent" id="tom-emoji">🤖</div>
+  <h1>Toms Beställningshjälp</h1>
 
-  if (
-    lower.includes("iphone 150") ||
-    lower.includes("iphone150") ||
-    lower.includes("i phone 150")
-  ) {
-    fel = true;
-    förslag = "iPhone 15";
-  } else if (lower.includes("iphone 15")) {
-    produkt = "iPhone 15";
-    tillbehör = ["Skärmskydd", "MagSafe-laddare", "AirPods"];
-  } else if (lower.includes("airpods")) {
-    produkt = "AirPods Pro";
-    tillbehör = ["Laddningsetui", "Ear tips", "Lightning-kabel"];
-  } else if (lower.includes("galaxy s24")) {
-    produkt = "Samsung Galaxy S24";
-    tillbehör = ["Skal", "Trådlös laddare", "Galaxy Buds"];
-  } else {
-    fel = true;
-  }
+  <textarea id="beskrivning" rows="4" cols="50">
+iPhone 15, Gatan 2, mottagande chef Anna-Lena Larsson
+  </textarea>
 
-  return { produkt, tillbehör, fel, förslag };
-}
+  <button onclick="tolkaBeställning()">Tolka</button>
+  <button onclick="startSpeech()">🎤 Säg din beställning</button>
 
-function tolkaBeställning() {
-  const input = document.getElementById("userInput").value;
-  const { produkt, tillbehör, fel, förslag } = tolkaInput(input);
-  const emoji = document.getElementById("tom-emoji");
-  const feedback = document.getElementById("feedback");
-  const cart = document.getElementById("cartItems");
-  const relaterade = document.getElementById("relaterade");
+  <div id="feedback"></div>
+  <div class="suggestions" id="relaterade"></div>
 
-  if (fel) {
-    emoji.innerText = "😠";
-    feedback.innerText = "Men vad gör du nu?" + (förslag ? " Menade du " + förslag + "?" : "");
-    speechSynthesis.cancel();
-    const felTal = new SpeechSynthesisUtterance("Men vad gör du nu?");
-    felTal.lang = "sv-SE";
-    speechSynthesis.speak(felTal);
-    relaterade.innerHTML = "";
-    return; // STOPPA om fel
-  }
+  <div id="cart">
+    <ul id="cartItems"></ul>
+  </div>
 
-  emoji.innerText = "😄";
-  feedback.innerText = `Jag lade ${produkt} och tillbehör i varukorgen.`;
+  <script>
+    function tolkaInput(input) {
+      const lower = input.toLowerCase();
+      let produkt = "";
+      let tillbehör = [];
+      let fel = false;
+      let förslag = "";
 
-  speechSynthesis.cancel();
-  const svar = new SpeechSynthesisUtterance(`Javisst! Jag lade till ${produkt} och tillbehören.`);
-  svar.lang = "sv-SE";
-  speechSynthesis.speak(svar);
-
-  const items = [`${produkt}`, ...tillbehör];
-  cart.innerHTML = "";
-  items.forEach(item => {
-    const li = document.createElement("li");
-    li.classList.add("cart-item");
-    li.textContent = item;
-    cart.appendChild(li);
-  });
-
-  relaterade.innerHTML = "<strong>Relaterade artiklar:</strong><br>• " + tillbehör.join("<br>• ");
-}
-
-function startSpeech() {
-  const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-  recognition.lang = "sv-SE";
-  recognition.onresult = function (event) {
-    document.getElementById("userInput").value = event.results[0][0].transcript;
-    tolkaBeställning();
-  };
-  recognition.start();
-}
-</script>
-
-</body>
-</html>
+      if (
+        lower.includes("iphone 150") ||
+        lower.includes("iphone150") ||
+        lower.includes("i phone 150")
+      ) {
+        fel = true;
+        förslag = "iPhone 15";
+      } else if (lower.includes("iphone 15")) {
+        produkt = "iPhone 15";
+        tillbehör = ["Skärmskydd", "MagSafe-laddare", "AirPods"];
+      } else if (lower.includes("airpods")) {
+        produkt = "AirPods Pro";
+        tillbehör = ["Laddningsetui", "Ear t]()
