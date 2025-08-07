@@ -172,45 +172,64 @@
   </div>
 
   <script>
-    const produkter = JSON.parse(localStorage.getItem("produkter")) || [];
-    const chef = localStorage.getItem("mottagareNamn") || "Anna Larsson";
-    const adress = localStorage.getItem("mottagareAdress") || "Gatan 2";
+  const produkter = JSON.parse(localStorage.getItem("produkter")) || [];
+  const chef = localStorage.getItem("mottagareNamn") || "Anna Larsson";
+  const adress = localStorage.getItem("mottagareAdress") || "Gatan 2";
 
-    document.getElementById("produkt").innerHTML = produkter.map(p => `✅ ${p}`).join("<br>");
-    document.getElementById("chef").innerText = chef;
-    document.getElementById("adress").innerText = adress;
+  document.getElementById("produkt").innerHTML = produkter.map(p => `✅ ${p}`).join("<br>");
+  document.getElementById("chef").innerText = chef;
+  document.getElementById("adress").innerText = adress;
 
-  // 🗣️ Robot-Tom pratar
-   
-      Jag skickar nu ett mejl till mottagande chef, ${chef}.`
-    );
+  function tomSpeak(text) {
+    const tal = new SpeechSynthesisUtterance(text);
     tal.lang = "sv-SE";
     tal.pitch = 1.1;
     tal.rate = 1;
-
-    // När han pratat klart: öppna Outlook
-    tal.onend = () => {
-      öppnaOutlookMejl();
-    };
-
-    speechSynthesis.cancel(); // Avbryt pågående tal
+    speechSynthesis.cancel();
     speechSynthesis.speak(tal);
+  }
 
-    // 📧 Öppna färdigifyllt mejl
-    function öppnaOutlookMejl() {
-      const email = chef
-        .toLowerCase()
-        .replace(/[åä]/g, 'a')
-        .replace(/ö/g, 'o')
-        .replace(/\s+/g, '.') + "@exempel.se";
+  function öppnaOutlookMejl() {
+    const email = chef.toLowerCase()
+      .replace(/[åä]/g, 'a')
+      .replace(/ö/g, 'o')
+      .replace(/\s+/g, '.') + "@exempel.se";
 
-      const subject = encodeURIComponent("Beställning från Tom");
-      const body = encodeURIComponent(
-        `Hej ${chef},\n\nFöljande produkter har beställts:\n\n- ${produkter.join("\n- ")}\n\nLeveransadress:\n${adress}\n\nVänliga hälsningar,\nTom – AI-assistent`
-      );
+    const subject = encodeURIComponent("Beställning från Tom");
+    const body = encodeURIComponent(
+      `Hej ${chef},\n\nFöljande produkter har beställts:\n\n- ${produkter.join("\n- ")}\n\nLeveransadress:\n${adress}\n\nVänliga hälsningar,\nTom – AI-assistent`
+    );
 
-      window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
-    }
-  </script>
+    window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
+  }
+
+  function visaFaktura() {
+    document.getElementById("invoiceModal").style.display = "block";
+    tomSpeak("Här är din faktura.");
+  }
+
+  function startListening() {
+    const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+    recognition.lang = "sv-SE";
+    recognition.start();
+
+    recognition.onresult = function(event) {
+      const command = event.results[0][0].transcript.toLowerCase();
+      console.log("Du sa:", command);
+
+      if (command.includes("visa faktura") || command.includes("visa mig fakturan")) {
+        visaFaktura();
+      } else if (command.includes("skicka mejl")) {
+        tomSpeak(`Jag skickar nu ett mejl till mottagande chef, ${chef}.`);
+        setTimeout(() => {
+          öppnaOutlookMejl();
+        }, 2000);
+      } else {
+        tomSpeak("Jag förstod inte kommandot.");
+      }
+    };
+  }
+</script>
+
 </body>
 </html>
