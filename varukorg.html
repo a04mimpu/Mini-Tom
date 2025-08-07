@@ -1,34 +1,125 @@
-
-
 <!DOCTYPE html>
 <html lang="sv">
 <head>
   <meta charset="UTF-8">
-  <title>Varukorg</title>
+  <title>Test ServiceNow</title>
   <style>
-    body { font-family: sans-serif; text-align: center; background: #fffaf0; padding: 40px; }
-    .box { background: #e0ffe0; border: 2px solid #a0dca0; padding: 20px; margin: 20px auto; width: 60%; border-radius: 10px; }
-    .check { font-size: 40px; color: green; }
+    body {
+      font-family: sans-serif;
+      background-color: #eef7ff;
+      text-align: center;
+      margin: 50px auto;
+    }
+
+    input, button {
+      padding: 10px;
+      width: 70%;
+      margin: 10px auto;
+      font-size: 16px;
+      display: block;
+    }
+
+    .agent-container {
+      position: relative;
+      display: inline-block;
+      margin-bottom: 20px;
+    }
+
+    .emoji {
+      font-size: 64px;
+      transition: transform 0.3s;
+    }
+
+    .bubble {
+      position: absolute;
+      top: -10px;
+      left: 100%;
+      background-color: white;
+      border: 1px solid #ccc;
+      padding: 10px;
+      border-radius: 10px;
+      width: 200px;
+      font-size: 14px;
+      text-align: left;
+      display: none;
+    }
+
+    .bubble::after {
+      content: "";
+      position: absolute;
+      top: 20px;
+      left: -10px;
+      width: 0;
+      height: 0;
+      border-top: 10px solid transparent;
+      border-bottom: 10px solid transparent;
+      border-right: 10px solid white;
+    }
+
+    #felmeddelande {
+      color: red;
+      font-weight: bold;
+      display: none;
+    }
   </style>
 </head>
 <body>
-  <h1>Din varukorg 🛒</h1>
-  <div class="box">
-    <div class="check">✅</div>
-    <div><strong>Produkt:</strong> <span id="produkt">-</span></div>
+  <div class="agent-container">
+    <div class="emoji" id="tomEmoji">🤖</div>
+    <div class="bubble" id="pratbubbla"></div>
   </div>
 
-  <div class="box">
-    <strong>Leverans till:</strong>
-    <div id="chef">-</div>
-    <div id="adress">-</div>
-  </div>
+  <h1>TestServiceNow</h1>
+
+  <!-- Förifyllda fält -->
+  <input type="text" id="produkt" value="iPhone 15">
+  <input type="text" id="chef" value="Anna Larsson">
+  <input type="text" id="adress" value="Gatan 2">
+
+  <button onclick="tolkaOchSkicka()">Tolka & skicka</button>
+
+  <p id="felmeddelande">😡 Men vad gör du nu? Alla fält måste fyllas i!</p>
 
   <script>
-    const params = new URLSearchParams(window.location.search);
-    document.getElementById("produkt").innerText = params.get("produkt") || "-";
-    document.getElementById("chef").innerText = params.get("chef") || "-";
-    document.getElementById("adress").innerText = params.get("adress") || "-";
+    function tala(text, emoji = "🤖", callback = null) {
+      const tom = document.getElementById("tomEmoji");
+      const bubbla = document.getElementById("pratbubbla");
+
+      tom.innerText = "🗣️";
+      bubbla.innerText = text;
+      bubbla.style.display = "block";
+
+      const röst = new SpeechSynthesisUtterance(text);
+      röst.lang = "sv-SE";
+      röst.onend = () => {
+        tom.innerText = emoji;
+        bubbla.style.display = "none";
+        if (callback) callback();
+      };
+
+      speechSynthesis.speak(röst);
+    }
+
+    function tolkaOchSkicka() {
+      const produkt = document.getElementById("produkt").value.trim();
+      const chef = document.getElementById("chef").value.trim();
+      const adress = document.getElementById("adress").value.trim();
+
+      if (!produkt || !chef || !adress) {
+        document.getElementById("felmeddelande").style.display = "block";
+        tala("Men vad gör du nu?", "😠");
+        return;
+      }
+
+      document.getElementById("felmeddelande").style.display = "none";
+
+      const beskrivning = `${produkt}, ${chef}, ${adress}`;
+
+      tala("Javisst! Jag lägger varorna i korgen och skickar vidare.", "😄", () => {
+        const url = `varukorg.html?produkt=${encodeURIComponent(produkt)}&chef=${encodeURIComponent(chef)}&adress=${encodeURIComponent(adress)}&beskrivning=${encodeURIComponent(beskrivning)}`;
+        window.location.href = url;
+      });
+    }
   </script>
 </body>
 </html>
