@@ -19,9 +19,41 @@
       display: block;
     }
 
+    .agent-container {
+      position: relative;
+      display: inline-block;
+      margin-bottom: 20px;
+    }
+
     .emoji {
       font-size: 64px;
       transition: transform 0.3s;
+    }
+
+    .bubble {
+      position: absolute;
+      top: -10px;
+      left: 100%;
+      background-color: white;
+      border: 1px solid #ccc;
+      padding: 10px;
+      border-radius: 10px;
+      width: 200px;
+      font-size: 14px;
+      text-align: left;
+      display: none;
+    }
+
+    .bubble::after {
+      content: "";
+      position: absolute;
+      top: 20px;
+      left: -10px;
+      width: 0;
+      height: 0;
+      border-top: 10px solid transparent;
+      border-bottom: 10px solid transparent;
+      border-right: 10px solid white;
     }
 
     #felmeddelande {
@@ -32,25 +64,39 @@
   </style>
 </head>
 <body>
-  <div class="emoji" id="tomEmoji">🤖</div>
+  <div class="agent-container">
+    <div class="emoji" id="tomEmoji">🤖</div>
+    <div class="bubble" id="pratbubbla"></div>
+  </div>
+
   <h1>TestServiceNow</h1>
 
   <!-- Förifyllda fält -->
   <input type="text" id="produkt" value="iPhone 15">
   <input type="text" id="chef" value="Anna Larsson">
   <input type="text" id="adress" value="Gatan 2">
-  
+
   <button onclick="tolkaOchSkicka()">Tolka & skicka</button>
 
   <p id="felmeddelande">😡 Men vad gör du nu? Alla fält måste fyllas i!</p>
 
   <script>
-    function tala(text, emoji = "🤖") {
+    function tala(text, emoji = "🤖", callback = null) {
       const tom = document.getElementById("tomEmoji");
-      tom.innerText = emoji;
+      const bubbla = document.getElementById("pratbubbla");
+
+      tom.innerText = "🗣️";
+      bubbla.innerText = text;
+      bubbla.style.display = "block";
 
       const röst = new SpeechSynthesisUtterance(text);
       röst.lang = "sv-SE";
+      röst.onend = () => {
+        tom.innerText = emoji;
+        bubbla.style.display = "none";
+        if (callback) callback();
+      };
+
       speechSynthesis.speak(röst);
     }
 
@@ -67,18 +113,12 @@
 
       document.getElementById("felmeddelande").style.display = "none";
 
-      // Beskrivning som Tom tolkar
       const beskrivning = `${produkt}, ${chef}, ${adress}`;
 
-      // Tom pratar
-      tala("Javisst! Jag lägger varorna i korgen och skickar vidare.", "😄");
-
-      // Vänta på att han pratat klart innan redirect
-      const väntetid = 3500; // ms
-      setTimeout(() => {
+      tala("Javisst! Jag lägger varorna i korgen och skickar vidare.", "😄", () => {
         const url = `varukorg.html?produkt=${encodeURIComponent(produkt)}&chef=${encodeURIComponent(chef)}&adress=${encodeURIComponent(adress)}&beskrivning=${encodeURIComponent(beskrivning)}`;
         window.location.href = url;
-      }, väntetid);
+      });
     }
   </script>
 </body>
