@@ -1,236 +1,143 @@
 <!DOCTYPE html>
 <html lang="sv">
 <head>
-  <meta charset="UTF-8">
-  <title>Tom – Varukorg & Fakturor</title>
+  <meta charset="UTF-8" />
+  <title>Varukorg</title>
   <style>
     body {
-      margin: 0;
       font-family: sans-serif;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .topbar {
-      background: #0067b8;
-      color: white;
-      padding: 10px 20px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    .topbar div {
-      display: flex;
-      gap: 30px;
-      font-size: 18px;
-    }
-
-    .container {
+      margin: 0;
       display: flex;
     }
-
     .sidebar {
-      width: 240px;
-      background: #d1f5d3;
+      background-color: #ffe6cc;
+      width: 220px;
       padding: 20px;
-      color: #000;
+      min-height: 100vh;
     }
-
-    .sidebar h2 {
+    .sidebar h3 {
       margin-top: 0;
     }
-
     .sidebar ul {
       list-style: none;
-      padding: 0;
+      padding-left: 0;
     }
-
     .sidebar li {
-      margin: 10px 0;
-      font-size: 16px;
-      display: flex;
-      justify-content: space-between;
+      padding: 10px 5px;
+      cursor: pointer;
     }
-
     .main {
-      flex-grow: 1;
+      flex: 1;
       padding: 40px;
-      background: #f8f8f8;
-      text-align: center;
+      background: #fffaf0;
     }
-
     .box {
-      background: #ffffff;
-      border: 2px solid #ccc;
+      background: #e0ffe0;
+      border: 2px solid #a0dca0;
       padding: 20px;
       margin: 20px auto;
-      width: 60%;
+      width: 80%;
       border-radius: 10px;
-      text-align: left;
+      text-align: center;
     }
-
     .check {
-      font-size: 30px;
+      font-size: 40px;
       color: green;
-      margin-right: 8px;
-    }
-
-    .talk-box {
-      margin-top: 40px;
-    }
-
-    .factura-popup {
-      display: none;
-      position: fixed;
-      top: 20%;
-      left: 35%;
-      background: white;
-      padding: 20px;
-      border: 2px solid green;
-      box-shadow: 0 0 10px #333;
-      z-index: 1000;
-    }
-
-    .factura-popup button {
-      margin-top: 10px;
-    }
-
-    h1 {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
     }
   </style>
 </head>
 <body>
 
-  <div class="topbar">
-    <div>
-      <span>Visma Proceedo</span>
-      <span>Inköp</span>
-      <span>Alla beställningar</span>
-      <span>Fakturor</span>
-      <span>Uppföljning</span>
-    </div>
-    <div>🛒</div>
+  <div class="sidebar">
+    <h3>Meny</h3>
+    <ul>
+      <li onclick="alert('Inga fakturor just nu')">📄 Fakturor <span id="fakturaAntal">(1)</span></li>
+      <li onclick="skickaBeställning()">📧 Skicka beställning</li>
+      <li>🛒 Varukorg</li>
+    </ul>
   </div>
 
-  <div class="container">
-    <!-- Meny till vänster -->
-    <div class="sidebar">
-      <h2>Att hantera</h2>
-      <ul>
-        <li><span>Godkänna</span> <span>0</span></li>
-        <li><span>Ej skickade</span> <span>0</span></li>
-        <li><span>Fakturor</span> <span id="antalFakturor">1</span></li>
-        <li><span>Leveranser</span> <span>2</span></li>
-        <li><span>Varukorgar</span> <span>1</span></li>
-      </ul>
+  <div class="main">
+    <h1>Din varukorg 🛒</h1>
+
+    <div class="box">
+      <div class="check">✅</div>
+      <div><strong>Produkter:</strong> <span id="produkt">-</span></div>
     </div>
 
-    <!-- Huvudinnehåll -->
-    <div class="main">
-      <h1>🛒 Din varukorg</h1>
-
-      <div class="box" id="produktBox">
-        <strong>Produkter:</strong>
-        <div id="produkt">-</div>
-      </div>
-
-      <div class="box">
-        <strong>Leverans till:</strong>
-        <div id="chef">-</div>
-        <div id="adress">-</div>
-      </div>
-
-      <div class="talk-box">
-        <p><strong>Säg: "Visa mig fakturan"</strong></p>
-        <button onclick="startListening()">🎤 Prata med Tom</button>
-      </div>
+    <div class="box">
+      <strong>Leverans till:</strong>
+      <div id="adress">-</div>
+      <div><strong>Mottagare:</strong> <span id="chef">-</span></div>
     </div>
-  </div>
-
-  <!-- Faktura-popup -->
-  <div class="factura-popup" id="fakturaRuta">
-    <h3>Faktura</h3>
-    <p>Fakturan gäller beställning #3471<br>Summa: 4 289 kr<br>Förfallodatum: 2025-09-01</p>
-    <button onclick="stängFaktura()">Stäng</button>
   </div>
 
   <script>
-    // 🧠 Hämta data från localStorage
     const produkter = JSON.parse(localStorage.getItem("produkter")) || [];
     const chef = localStorage.getItem("mottagareNamn") || "Okänd chef";
     const adress = localStorage.getItem("mottagareAdress") || "Okänd adress";
 
-    // Visa produkterna
-    const produktEl = document.getElementById("produkt");
-    if (produkter.length > 0) {
-      produktEl.innerHTML = produkter.map(p => `✅ ${p}`).join("<br>");
-    } else {
-      produktEl.innerText = "-";
-    }
-
-    // Visa chef och adress
+    document.getElementById("produkt").innerHTML = produkter.map(p => `✅ ${p}`).join("<br>");
     document.getElementById("chef").innerText = chef;
     document.getElementById("adress").innerText = adress;
 
-    // Tom pratar automatiskt
-    const tts = new SpeechSynthesisUtterance(
-      `Jag har lagt ${produkter.join(", ")} i korgen. Leveransen går till ${chef} på ${adress}.`
+    // 🗣️ Robot-Tom pratar upp varukorgen
+    const intro = new SpeechSynthesisUtterance(
+      `Jag har lagt ${produkter.join(", ")} i korgen. Leverans går till ${chef} på ${adress}.`
     );
-    tts.lang = "sv-SE";
-    speechSynthesis.speak(tts);
+    intro.lang = "sv-SE";
+    intro.onend = () => startaRöstigenkänning();
+    window.speechSynthesis.speak(intro);
 
-    // 🎤 Röststyrning
-    function startListening() {
-      if (!('webkitSpeechRecognition' in window)) {
-        alert("Din webbläsare stöder inte röststyrning.");
-        return;
-      }
+    function skickaBeställning() {
+      const mailTill = chef
+        .toLowerCase()
+        .replace(/[åä]/g, 'a')
+        .replace(/ö/g, 'o')
+        .replace(/\s+/g, '.') + "@example.se";
 
-      const recognition = new webkitSpeechRecognition();
-      recognition.lang = "sv-SE";
+      const subject = encodeURIComponent(`Beställning av ${produkter[0]}`);
+      const body = encodeURIComponent(
+        `Hej ${chef},\n\nFöljande produkter har beställts:\n\n- ${produkter.join("\n- ")}\n\nLeveransadress:\n${adress}\n\nVänliga hälsningar,\nTom – AI-assistent`
+      );
+
+      const mailURL = `mailto:${mailTill}?subject=${subject}&body=${body}`;
+
+      const bekräfta = new SpeechSynthesisUtterance(`Jag skickar beställningen till ${chef} på ${adress}`);
+      bekräfta.lang = "sv-SE";
+      bekräfta.onend = () => {
+        window.location.href = mailURL;
+
+        // Låt Tom säga klart!
+        setTimeout(() => {
+          const klart = new SpeechSynthesisUtterance("Klart! Mejlet är förberett.");
+          klart.lang = "sv-SE";
+          speechSynthesis.speak(klart);
+        }, 3000);
+      };
+      speechSynthesis.speak(bekräfta);
+    }
+
+    // 🎤 Röstigenkänning
+    function startaRöstigenkänning() {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRecognition) return;
+
+      const recognition = new SpeechRecognition();
+      recognition.lang = 'sv-SE';
       recognition.continuous = false;
       recognition.interimResults = false;
 
-      recognition.onresult = function(event) {
-        const text = event.results[0][0].transcript.toLowerCase();
-        if (text.includes("visa mig fakturan")) {
-          const antal = parseInt(document.getElementById("antalFakturor").innerText, 10);
-          if (antal > 0) {
-            säg("Här är den senaste fakturan.");
-            visaFaktura();
-          } else {
-            säg("Det finns inga fakturor just nu.");
-          }
-        } else {
-          säg("Jag förstod inte vad du sa.");
+      recognition.onresult = (event) => {
+        const transkript = event.results[0][0].transcript.toLowerCase();
+        if (transkript.includes("skicka beställningen")) {
+          skickaBeställning();
         }
-      };
-
-      recognition.onerror = function() {
-        säg("Jag hörde inte, försök igen.");
       };
 
       recognition.start();
     }
-
-    function säg(text) {
-      const tts = new SpeechSynthesisUtterance(text);
-      tts.lang = "sv-SE";
-      speechSynthesis.speak(tts);
-    }
-
-    function visaFaktura() {
-      document.getElementById("fakturaRuta").style.display = "block";
-    }
-
-    function stängFaktura() {
-      document.getElementById("fakturaRuta").style.display = "none";
-    }
   </script>
+
 </body>
 </html>
