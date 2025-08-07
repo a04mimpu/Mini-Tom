@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="sv">
 <head>
-  <meta charset="UTF-8">
-  <title>Toms Beställningshjälp</title>
+  <meta charset="UTF-8" />
+  <title>TestServiceNow</title>
   <style>
     body {
       font-family: sans-serif;
@@ -10,30 +10,28 @@
       text-align: center;
       padding: 30px;
     }
-    input, button, textarea {
+    textarea {
+      width: 80%;
       padding: 10px;
       font-size: 16px;
-      margin: 10px auto;
-      display: block;
-      width: 80%;
     }
-    #feedback, .suggestions {
+    button {
       margin-top: 15px;
-      font-size: 14px;
+      padding: 10px 20px;
+      font-size: 16px;
     }
     .agent {
       font-size: 100px;
-      transition: 0.3s ease;
+      margin-bottom: 10px;
     }
-    #cart {
-      background-color: #fff;
+    .suggestions, #feedback {
       margin-top: 20px;
-      padding: 10px;
-      border-radius: 10px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-      max-width: 400px;
-      margin-left: auto;
-      margin-right: auto;
+      font-size: 16px;
+    }
+    #cartItems {
+      margin-top: 20px;
+      list-style: none;
+      padding: 0;
     }
     .cart-item::before {
       content: '✅ ';
@@ -46,19 +44,14 @@
   <div class="agent" id="tom-emoji">🤖</div>
   <h1>Toms Beställningshjälp</h1>
 
-  <textarea id="beskrivning" rows="4" cols="50">
-iPhone 15, Gatan 2, mottagande chef Anna-Lena Larsson
-  </textarea>
+  <textarea id="beskrivning" rows="4" cols="50">iPhone 15, Gatan 2, mottagande chef Anna Larsson</textarea><br>
 
   <button onclick="tolkaBeställning()">Tolka</button>
-  <button onclick="startSpeech()">🎤 Säg din beställning</button>
+  <button onclick="tolkaOchSkicka()">Tolka & Gå vidare</button>
 
   <div id="feedback"></div>
+  <ul id="cartItems"></ul>
   <div class="suggestions" id="relaterade"></div>
-
-  <div id="cart">
-    <ul id="cartItems"></ul>
-  </div>
 
   <script>
     function tolkaInput(input) {
@@ -68,11 +61,7 @@ iPhone 15, Gatan 2, mottagande chef Anna-Lena Larsson
       let fel = false;
       let förslag = "";
 
-      if (
-        lower.includes("iphone 150") ||
-        lower.includes("iphone150") ||
-        lower.includes("i phone 150")
-      ) {
+      if (lower.includes("iphone 150") || lower.includes("iphone150")) {
         fel = true;
         förslag = "iPhone 15";
       } else if (lower.includes("iphone 15")) {
@@ -91,56 +80,78 @@ iPhone 15, Gatan 2, mottagande chef Anna-Lena Larsson
       return { produkt, tillbehör, fel, förslag };
     }
 
-   function tolkaBeställning() {
-  const input = document.getElementById("beskrivning").value;
-  const { produkt, tillbehör, fel, förslag } = tolkaInput(input);
-  const emoji = document.getElementById("tom-emoji");
-  const feedback = document.getElementById("feedback");
-  const cart = document.getElementById("cartItems");
-  const relaterade = document.getElementById("relaterade");
+    function extractChefOchAdress(input) {
+      const chefMatch = input.match(/chef\s+([a-zåäö\s\-]+)/i);
+      const adressMatch = input.match(/(?:,|^)\s*([^,]+gatan\s*\d+)/i);
 
-  // Avbryt pågående tal
-  window.speechSynthesis.cancel();
+      const chef = chefMatch ? chefMatch[1].trim() : "Okänd chef";
+      const adress = adressMatch ? adressMatch[1].trim() : "Okänd adress";
+      return { chef, adress };
+    }
 
-  if (fel) {
-    emoji.innerText = "😠";
-    feedback.innerText = "Men vad gör du nu?" + (förslag ? " Menade du " + förslag + "?" : "");
-    const felTal = new SpeechSynthesisUtterance("Men vad gör du nu?" + (förslag ? " Menade du " + förslag + "?" : ""));
-    felTal.lang = "sv-SE";
-    window.speechSynthesis.speak(felTal);
-    relaterade.innerHTML = "";
-    cart.innerHTML = "";
-    return;
-  }
+    function tolkaBeställning() {
+      const input = document.getElementById("beskrivning").value;
+      const { produkt, tillbehör, fel, förslag } = tolkaInput(input);
+      const emoji = document.getElementById("tom-emoji");
+      const feedback = document.getElementById("feedback");
+      const cart = document.getElementById("cartItems");
+      const relaterade = document.getElementById("relaterade");
 
-  emoji.innerText = "😄";
-  feedback.innerText = `Jag lade ${produkt} och tillbehör i varukorgen.`;
+      window.speechSynthesis.cancel();
 
-  const svar = new SpeechSynthesisUtterance(`Javisst! Jag lade till ${produkt} och tillbehören.`);
-  svar.lang = "sv-SE";
-  window.speechSynthesis.speak(svar);
+      if (fel) {
+        emoji.innerText = "😠";
+        feedback.innerText = "Men vad gör du nu?" + (förslag ? " Menade du " + förslag + "?" : "");
+        const felTal = new SpeechSynthesisUtterance("Men vad gör du nu?" + (förslag ? " Menade du " + förslag + "?" : ""));
+        felTal.lang = "sv-SE";
+        window.speechSynthesis.speak(felTal);
+        relaterade.innerHTML = "";
+        cart.innerHTML = "";
+        return;
+      }
 
-  const items = [`${produkt}`, ...tillbehör];
-  cart.innerHTML = "";
-  items.forEach(item => {
-    const li = document.createElement("li");
-    li.classList.add("cart-item");
-    li.textContent = item;
-    cart.appendChild(li);
-  });
+      emoji.innerText = "😄";
+      feedback.innerText = `Jag lade ${produkt} och tillbehör i varukorgen.`;
 
-  relaterade.innerHTML = "<strong>Relaterade artiklar:</strong><br>• " + tillbehör.join("<br>• ");
-}
+      const svar = new SpeechSynthesisUtterance(`Javisst! Jag lade till ${produkt} och tillbehören.`);
+      svar.lang = "sv-SE";
+      window.speechSynthesis.speak(svar);
 
+      const items = [`${produkt}`, ...tillbehör];
+      cart.innerHTML = "";
+      items.forEach(item => {
+        const li = document.createElement("li");
+        li.classList.add("cart-item");
+        li.textContent = item;
+        cart.appendChild(li);
+      });
 
-    function startSpeech() {
-      const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-      recognition.lang = "sv-SE";
-      recognition.onresult = function (event) {
-        document.getElementById("beskrivning").value = event.results[0][0].transcript;
-        tolkaBeställning();
-      };
-      recognition.start();
+      relaterade.innerHTML = "<strong>Relaterade artiklar:</strong><br>• " + tillbehör.join("<br>• ");
+    }
+
+    function tolkaOchSkicka() {
+      const input = document.getElementById("beskrivning").value;
+      const { produkt, tillbehör, fel } = tolkaInput(input);
+      const { chef, adress } = extractChefOchAdress(input);
+
+      if (fel) {
+        alert("Tom kunde inte förstå beställningen.");
+        return;
+      }
+
+      // Spara i localStorage
+      localStorage.setItem("produkter", JSON.stringify([produkt, ...tillbehör]));
+      localStorage.setItem("mottagareNamn", chef);
+      localStorage.setItem("mottagareAdress", adress);
+
+      const tal = new SpeechSynthesisUtterance("Jag lägger allt i varukorgen och skickar dig vidare.");
+      tal.lang = "sv-SE";
+      window.speechSynthesis.speak(tal);
+
+      // Vänta lite så att talet hinner spelas upp
+      setTimeout(() => {
+        window.location.href = "varukorg.html";
+      }, 2500);
     }
   </script>
 
