@@ -5,79 +5,104 @@
   <title>Varukorg</title>
   <style>
     body {
-      font-family: sans-serif;
-      background-color: #f3f9ff;
-      text-align: center;
-      padding: 40px;
+      margin: 0;
+      font-family: "Segoe UI", sans-serif;
+      background: #fffaf0;
+    }
+
+    /* Menyrad */
+    .top-nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background-color: #0069aa;
+      padding: 10px 20px;
+      color: white;
+    }
+
+    .nav-left, .nav-right {
+      display: flex;
+      align-items: center;
+    }
+
+    .nav-left div {
+      margin-right: 25px;
+      cursor: pointer;
+    }
+
+    .nav-left div:hover {
+      text-decoration: underline;
+    }
+
+    .nav-right img {
+      width: 24px;
+      height: 24px;
     }
 
     h1 {
-      font-size: 2.2em;
-      margin-bottom: 10px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
+      text-align: center;
+      margin-top: 40px;
+      font-size: 28px;
     }
 
-    h1::before {
-      content: "🛒";
-      font-size: 1.2em;
+    .cart-icon {
+      vertical-align: middle;
+      margin-right: 10px;
     }
 
-    .cart-box {
-      background: #ffffff;
+    .box {
+      background: #e0ffe0;
       border: 2px solid #a0dca0;
       padding: 20px;
       margin: 20px auto;
-      width: 80%;
-      max-width: 500px;
-      border-radius: 12px;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+      width: 60%;
+      border-radius: 10px;
+      font-size: 18px;
     }
 
-    .cart-box ul {
-      list-style: none;
-      padding: 0;
-    }
-
-    .cart-box li::before {
-      content: '✅ ';
+    .check {
+      font-size: 30px;
       color: green;
-      margin-right: 5px;
+      margin-bottom: 10px;
     }
 
-    .info-section {
-      margin-top: 30px;
-    }
-
-    .delivery-box {
-      background-color: #ffffff;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      padding: 15px 25px;
-      max-width: 400px;
-      margin: 10px auto;
-      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-      font-size: 16px;
-      line-height: 1.6;
+    .info-line {
+      margin-top: 10px;
+      font-weight: bold;
     }
   </style>
 </head>
 <body>
 
-  <h1>Din varukorg</h1>
-
-  <div class="cart-box">
-    <ul id="produkt"></ul>
+  <!-- Menyrad -->
+  <div class="top-nav">
+    <div class="nav-left">
+      <div>Visma Proceedo</div>
+      <div>Inköp</div>
+      <div>Alla beställningar</div>
+      <div>Fakturor</div>
+      <div>Uppföljning</div>
+    </div>
+    <div class="nav-right">
+      <img src="https://cdn-icons-png.flaticon.com/512/1170/1170678.png" alt="Varukorg">
+    </div>
   </div>
 
-  <div class="info-section">
-    <h3>Leverans till:</h3>
-    <div class="delivery-box">
-      <div><strong>Chef:</strong> <span id="chef">-</span></div>
-      <div><strong>Adress:</strong> <span id="adress">-</span></div>
-    </div>
+  <!-- Rubrik med ikon -->
+  <h1><img class="cart-icon" src="https://cdn-icons-png.flaticon.com/512/1170/1170678.png" alt="Varukorg" width="30">Din varukorg</h1>
+
+  <!-- Produkter -->
+  <div class="box">
+    <div class="check">✅</div>
+    <div><strong>Produkt(er):</strong></div>
+    <div id="produkt">-</div>
+  </div>
+
+  <!-- Leveransinformation -->
+  <div class="box">
+    <strong>Leverans till:</strong>
+    <div class="info-line" id="chef">-</div>
+    <div id="adress">-</div>
   </div>
 
   <script>
@@ -86,33 +111,38 @@
     const chef = localStorage.getItem("mottagareNamn") || "Okänd chef";
     const adress = localStorage.getItem("mottagareAdress") || "Okänd adress";
 
-    // Fyll i produkterna i listan
+    // Visa produkterna
     const produktEl = document.getElementById("produkt");
-    produkter.forEach(p => {
-      const li = document.createElement("li");
-      li.textContent = p;
-      produktEl.appendChild(li);
-    });
+    if (produkter.length > 0) {
+      produktEl.innerHTML = produkter.map(p => `✅ ${p}`).join("<br>");
+    } else {
+      produktEl.innerText = "-";
+    }
 
-    // Fyll i chef och adress
+    // Visa chef och adress
     document.getElementById("chef").innerText = chef;
     document.getElementById("adress").innerText = adress;
 
-    // 🗣️ Robot-Tom pratar
-    const tal = new SpeechSynthesisUtterance(
-      `Jag har lagt ${produkter.join(", ")} i korgen. 
-      Leveransen går till ${chef} på ${adress}. 
-      Jag skickar nu ett mejl till mottagande chef.`
-    );
-    tal.lang = "sv-SE";
-    tal.onend = () => {
+    // 🗣️ Robot-Tom pratar och öppnar mejl
+    const tts = new SpeechSynthesisUtterance();
+    tts.lang = "sv-SE";
+    tts.pitch = 1.1;
+    tts.rate = 1;
+
+    if (produkter.length > 0) {
+      tts.text = `Jag har lagt ${produkter.join(", ")} i korgen. Leveransen går till ${chef} på ${adress}. Jag skickar nu ett mejl till mottagande chef.`;
+    } else {
+      tts.text = "Inga produkter har lagts i korgen.";
+    }
+
+    tts.onend = () => {
       öppnaOutlookMejl();
     };
 
-    speechSynthesis.cancel();
-    speechSynthesis.speak(tal);
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(tts);
 
-    // Öppna Outlook-mail
+    // Öppna Outlook med färdigt mejl
     function öppnaOutlookMejl() {
       const email = chef
         .toLowerCase()
