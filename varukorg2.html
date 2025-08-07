@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8" />
+  <title>Varukorg</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: sans-serif;
+      background: #f9fdf9;
+    }
+
+    /* Toppmeny */
+    .topnav {
+      background-color: #1e6f3d;
+      overflow: hidden;
+      display: flex;
+    }
+
+    .topnav div {
+      color: white;
+      padding: 14px 20px;
+      text-align: center;
+      cursor: pointer;
+      border-right: 1px solid #14582d;
+    }
+
+    .topnav div:last-child {
+      border-right: none;
+    }
+
+    /* Layout */
+    .main {
+      display: flex;
+    }
+
+    /* Sidomeny */
+    .menu {
+      background: #1e6f3d;
+      color: white;
+      width: 200px;
+      padding: 30px 10px;
+      height: 100vh;
+    }
+
+    .menu h2 {
+      margin-top: 0;
+      font-size: 20px;
+    }
+
+    .menu ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    .menu li {
+      margin: 20px 0;
+      cursor: pointer;
+    }
+
+    /* Innehåll */
+    .content {
+      flex: 1;
+      padding: 40px;
+    }
+
+    h1 {
+      font-size: 28px;
+      margin-bottom: 20px;
+    }
+
+    .box {
+      background: #e9ffe9;
+      border: 1px solid #b7e1b7;
+      padding: 20px;
+      margin-bottom: 20px;
+      border-radius: 8px;
+    }
+
+    .check {
+      font-size: 30px;
+      color: green;
+    }
+
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      margin-top: 10px;
+    }
+
+    #voiceStatus {
+      margin-top: 20px;
+      font-style: italic;
+      color: #555;
+    }
+
+    /* Faktura-popup */
+    #fakturaModal {
+      display: none;
+      position: fixed;
+      z-index: 99;
+      left: 50%;
+      top: 30%;
+      transform: translate(-50%, -30%);
+      background: white;
+      padding: 20px;
+      border: 2px solid green;
+      box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.3);
+    }
+
+    #fakturaModal button {
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Toppmeny -->
+  <div class="topnav">
+    <div>Visma Proceedo</div>
+    <div>Inköp</div>
+    <div>Alla beställningar</div>
+    <div>Fakturor</div>
+    <div>Uppföljning</div>
+  </div>
+
+  <div class="main">
+    <!-- Sidomeny -->
+    <div class="menu">
+      <h2>📋 Meny</h2>
+      <ul>
+        <li>✅ Varukorg</li>
+        <li>📄 Fakturor</li>
+        <li>📦 Leveranser</li>
+      </ul>
+    </div>
+
+    <!-- Innehåll -->
+    <div class="content">
+      <h1>Din varukorg 🛒</h1>
+
+      <div class="box">
+        <div class="check">✅</div>
+        <div><strong>Produkter:</strong><br><span id="produkt">-</span></div>
+      </div>
+
+      <div class="box">
+        <strong>Leveransadress:</strong>
+        <div id="adress">-</div>
+        <br>
+        <strong>Mottagare:</strong>
+        <div id="chef">-</div>
+      </div>
+
+      <div>
+        <strong>Säg:</strong> "Skicka mejl" eller klicka nedan<br>
+        <button onclick="visaFaktura()">🧠 Prata med Tom</button>
+      </div>
+
+      <div id="voiceStatus">🎤 Tom lyssnar...</div>
+    </div>
+  </div>
+
+  <!-- Faktura-popup -->
+  <div id="fakturaModal">
+    <h3>Faktura</h3>
+    <p>Fakturan gäller beställning #3471<br>
+    Summa: 4 289 kr<br>
+    Förfallodatum: 2025-09-01</p>
+    <button onclick="stängFaktura()">Stäng</button>
+  </div>
+
+  <script>
+    const produkter = JSON.parse(localStorage.getItem("produkter")) || [];
+    const chef = localStorage.getItem("mottagareNamn") || "Anna Larsson";
+    const adress = localStorage.getItem("mottagareAdress") || "Gatan 2";
+
+    document.getElementById("produkt").innerHTML = produkter.map(p => `✅ ${p}`).join("<br>");
+    document.getElementById("chef").innerText = chef;
+    document.getElementById("adress").innerText = adress;
+
+    // 🗣️ Tom pratar
+    const tts = new SpeechSynthesisUtterance(
+      `Jag har lagt ${produkter.join(", ")} i korgen. Leveransen går till ${adress}, till ${chef}.`
+    );
+    tts.lang = "sv-SE";
+    speechSynthesis.speak(tts);
+
+    // 🎤 Röstigenkänning
+    window.SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const recognition = new SpeechRecognition();
+    recognition.lang = "sv-SE";
+    recognition.continuous = false;
+
+    recognition.onresult = (event) => {
+      const transcript = event.results[0][0].transcript.toLowerCase();
+      document.getElementById("voiceStatus").innerText = `📢 Du sa: "${transcript}"`;
+
+      if (transcript.includes("skicka mejl")) {
+        const tts2 = new SpeechSynthesisUtterance(`Jag skickar mejlet nu till ${chef}`);
+        tts2.lang = "sv-SE";
+        speechSynthesis.speak(tts2);
+        setTimeout(öppnaOutlookMejl, 2000);
+      }
+
+      if (transcript.includes("visa fakturan")) {
+        visaFaktura();
+      }
+    };
+
+    recognition.onerror = () => {
+      document.getElementById("voiceStatus").innerText = "⚠️ Något gick fel med röstigenkänningen.";
+    };
+
+    recognition.start();
+
+    function öppnaOutlookMejl() {
+      const email = chef
+        .toLowerCase()
+        .replace(/[åä]/g, 'a')
+        .replace(/ö/g, 'o')
+        .replace(/\s+/g, '.') + "@example.se";
+
+      const subject = encodeURIComponent("Beställning från Tom");
+      const body = encodeURIComponent(
+        `Hej ${chef},\n\nFöljande produkter har beställts:\n\n- ${produkter.join("\n- ")}\n\nLeveransadress:\n${adress}\n\nVänliga hälsningar,\nTom – AI-assistent`
+      );
+
+      window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
+    }
+
+    function visaFaktura() {
+      document.getElementById("fakturaModal").style.display = "block";
+    }
+
+    function stängFaktura() {
+      document.getElementById("fakturaModal").style.display = "none";
+    }
+  </script>
+
+</body>
+</html>
