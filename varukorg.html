@@ -13,27 +13,47 @@
 
     .container {
       background: white;
-      padding: 20px;
+      padding: 30px;
       border-radius: 10px;
       max-width: 600px;
       margin: auto;
       box-shadow: 0 0 10px rgba(0,0,0,0.1);
     }
 
-    .produkt {
-      font-size: 20px;
-      margin-top: 20px;
+    #emoji {
+      font-size: 80px;
+      margin: 10px 0;
+    }
+
+    h1 {
+      margin-bottom: 20px;
+    }
+
+    ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    li {
+      font-size: 18px;
+      margin: 10px 0;
+    }
+
+    .green-check {
+      color: green;
+      margin-right: 10px;
     }
 
     .mottagare {
-      margin-top: 10px;
+      margin-top: 20px;
       font-weight: bold;
+      font-size: 16px;
       color: #333;
     }
 
-    #emoji {
-      font-size: 80px;
-      margin: 20px 0;
+    .cart-icon {
+      font-size: 20px;
+      margin-right: 5px;
     }
   </style>
 </head>
@@ -43,8 +63,12 @@
     <div id="emoji">👍</div>
     <h1>Varukorg</h1>
 
-    <div class="produkt" id="produkt">Laddar produkt...</div>
-    <div class="mottagare" id="mottagare"></div>
+    <div id="artiklar">
+      <p><span class="cart-icon">🛒</span><strong>Följande artiklar har lagts i din korg:</strong></p>
+      <ul id="artikelLista"></ul>
+    </div>
+
+    <div class="mottagare" id="mottagare">Laddar mottagare...</div>
   </div>
 
   <script>
@@ -52,14 +76,22 @@
       return new URLSearchParams(window.location.search).get(param) || "";
     }
 
-    const produkt = hämtaFrånURL("produkt");
+    const artiklar = hämtaFrånURL("artiklar").split(",");
     const adress = hämtaFrånURL("adress");
     const chef = hämtaFrånURL("chef");
 
-    document.getElementById("produkt").innerHTML = `🛒 <strong>${produkt}</strong> har lagts i din korg.`;
+    const lista = document.getElementById("artikelLista");
+    artiklar.forEach(artikel => {
+      if (artikel.trim()) {
+        const item = document.createElement("li");
+        item.innerHTML = `<span class="green-check">✅</span>${artikel.trim()}`;
+        lista.appendChild(item);
+      }
+    });
+
     document.getElementById("mottagare").innerText = `Mottagare: ${chef}, ${adress}`;
 
-    const tts = new SpeechSynthesisUtterance("Beställningen är mottagen! Varorna har lagts i korgen.");
+    const tts = new SpeechSynthesisUtterance("Beställningen är mottagen! Dina varor har lagts i korgen.");
     tts.lang = "sv-SE";
     speechSynthesis.speak(tts);
   </script>
