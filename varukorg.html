@@ -8,6 +8,81 @@
       font-family: sans-serif;
       text-align: center;
       background: #fffaf0;
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8">
+  <title>Varukorg</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      text-align: center;
+      background: #fffaf0;
+      padding: 40px;
+    }
+    .box {
+      background: #e0ffe0;
+      border: 2px solid #a0dca0;
+      padding: 20px;
+      margin: 20px auto;
+      width: 60%;
+      border-radius: 10px;
+    }
+    .check {
+      font-size: 40px;
+      color: green;
+    }
+  </style>
+</head>
+<body>
+  <h1>Din varukorg 🛒</h1>
+
+  <div class="box">
+    <div class="check">✅</div>
+    <div><strong>Produkt:</strong> <span id="produkt">-</span></div>
+  </div>
+
+  <div class="box">
+    <strong>Leverans till:</strong>
+    <div id="chef">-</div>
+    <div id="adress">-</div>
+  </div>
+
+  <script>
+    // Hämta data från localStorage
+    const produkter = JSON.parse(localStorage.getItem("produkter")) || [];
+    const chef = localStorage.getItem("mottagareNamn") || "-";
+    const adress = localStorage.getItem("mottagareAdress") || "-";
+
+    // Visa produkterna
+    const produktEl = document.getElementById("produkt");
+    if (produkter.length > 0) {
+      produktEl.innerHTML = produkter.map(p => `✅ ${p}`).join("<br>");
+    } else {
+      produktEl.innerText = "-";
+    }
+
+    // Visa chef och adress
+    document.getElementById("chef").innerText = chef;
+    document.getElementById("adress").innerText = adress;
+
+    // 🗣️ Robot-Tom pratar
+    const tts = new SpeechSynthesisUtterance();
+    tts.lang = "sv-SE";
+    tts.pitch = 1.1;
+    tts.rate = 1;
+
+    if (produkter.length > 0) {
+      tts.text = `Jag har lagt ${produkter.join(", ")} i korgen. Leveransen går till ${chef} på ${adress}.`;
+    } else {
+      tts.text = "Inga produkter har lagts i korgen.";
+    }
+
+    window.speechSynthesis.speak(tts);
+  </script>
+</body>
+</html>
+
       padding: 40px;
     }
     .box {
