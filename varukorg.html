@@ -1,125 +1,68 @@
 <!DOCTYPE html>
 <html lang="sv">
 <head>
-  <meta charset="UTF-8">
-  <title>Test ServiceNow</title>
+  <meta charset="UTF-8" />
+  <title>Varukorg</title>
   <style>
     body {
       font-family: sans-serif;
-      background-color: #eef7ff;
+      background-color: #f9fcff;
       text-align: center;
-      margin: 50px auto;
+      padding: 40px;
     }
 
-    input, button {
-      padding: 10px;
-      width: 70%;
-      margin: 10px auto;
-      font-size: 16px;
-      display: block;
-    }
-
-    .agent-container {
-      position: relative;
-      display: inline-block;
-      margin-bottom: 20px;
-    }
-
-    .emoji {
-      font-size: 64px;
-      transition: transform 0.3s;
-    }
-
-    .bubble {
-      position: absolute;
-      top: -10px;
-      left: 100%;
-      background-color: white;
-      border: 1px solid #ccc;
-      padding: 10px;
+    .container {
+      background: white;
+      padding: 20px;
       border-radius: 10px;
-      width: 200px;
-      font-size: 14px;
-      text-align: left;
-      display: none;
+      max-width: 600px;
+      margin: auto;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
     }
 
-    .bubble::after {
-      content: "";
-      position: absolute;
-      top: 20px;
-      left: -10px;
-      width: 0;
-      height: 0;
-      border-top: 10px solid transparent;
-      border-bottom: 10px solid transparent;
-      border-right: 10px solid white;
+    .produkt {
+      font-size: 20px;
+      margin-top: 20px;
     }
 
-    #felmeddelande {
-      color: red;
+    .mottagare {
+      margin-top: 10px;
       font-weight: bold;
-      display: none;
+      color: #333;
+    }
+
+    #emoji {
+      font-size: 80px;
+      margin: 20px 0;
     }
   </style>
 </head>
 <body>
-  <div class="agent-container">
-    <div class="emoji" id="tomEmoji">🤖</div>
-    <div class="bubble" id="pratbubbla"></div>
+
+  <div class="container">
+    <div id="emoji">👍</div>
+    <h1>Varukorg</h1>
+
+    <div class="produkt" id="produkt">Laddar produkt...</div>
+    <div class="mottagare" id="mottagare"></div>
   </div>
 
-  <h1>TestServiceNow</h1>
-
-  <!-- Förifyllda fält -->
-  <input type="text" id="produkt" value="iPhone 15">
-  <input type="text" id="chef" value="Anna Larsson">
-  <input type="text" id="adress" value="Gatan 2">
-
-  <button onclick="tolkaOchSkicka()">Tolka & skicka</button>
-
-  <p id="felmeddelande">😡 Men vad gör du nu? Alla fält måste fyllas i!</p>
-
   <script>
-    function tala(text, emoji = "🤖", callback = null) {
-      const tom = document.getElementById("tomEmoji");
-      const bubbla = document.getElementById("pratbubbla");
-
-      tom.innerText = "🗣️";
-      bubbla.innerText = text;
-      bubbla.style.display = "block";
-
-      const röst = new SpeechSynthesisUtterance(text);
-      röst.lang = "sv-SE";
-      röst.onend = () => {
-        tom.innerText = emoji;
-        bubbla.style.display = "none";
-        if (callback) callback();
-      };
-
-      speechSynthesis.speak(röst);
+    function hämtaFrånURL(param) {
+      return new URLSearchParams(window.location.search).get(param) || "";
     }
 
-    function tolkaOchSkicka() {
-      const produkt = document.getElementById("produkt").value.trim();
-      const chef = document.getElementById("chef").value.trim();
-      const adress = document.getElementById("adress").value.trim();
+    const produkt = hämtaFrånURL("produkt");
+    const adress = hämtaFrånURL("adress");
+    const chef = hämtaFrånURL("chef");
 
-      if (!produkt || !chef || !adress) {
-        document.getElementById("felmeddelande").style.display = "block";
-        tala("Men vad gör du nu?", "😠");
-        return;
-      }
+    document.getElementById("produkt").innerHTML = `🛒 <strong>${produkt}</strong> har lagts i din korg.`;
+    document.getElementById("mottagare").innerText = `Mottagare: ${chef}, ${adress}`;
 
-      document.getElementById("felmeddelande").style.display = "none";
-
-      const beskrivning = `${produkt}, ${chef}, ${adress}`;
-
-      tala("Javisst! Jag lägger varorna i korgen och skickar vidare.", "😄", () => {
-        const url = `varukorg.html?produkt=${encodeURIComponent(produkt)}&chef=${encodeURIComponent(chef)}&adress=${encodeURIComponent(adress)}&beskrivning=${encodeURIComponent(beskrivning)}`;
-        window.location.href = url;
-      });
-    }
+    const tts = new SpeechSynthesisUtterance("Beställningen är mottagen! Varorna har lagts i korgen.");
+    tts.lang = "sv-SE";
+    speechSynthesis.speak(tts);
   </script>
+
 </body>
 </html>
