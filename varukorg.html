@@ -2,7 +2,7 @@
 <html lang="sv">
 <head>
   <meta charset="UTF-8">
-  <title>Smart Beställning – Tom</title>
+  <title>Tom – Varukorg & Fakturor</title>
   <style>
     body {
       margin: 0;
@@ -11,7 +11,6 @@
       flex-direction: column;
     }
 
-    /* Toppmeny */
     .topbar {
       background: #0067b8;
       color: white;
@@ -25,6 +24,10 @@
       display: flex;
       gap: 30px;
       font-size: 18px;
+    }
+
+    .container {
+      display: flex;
     }
 
     .sidebar {
@@ -57,16 +60,24 @@
       text-align: center;
     }
 
-    .container {
-      display: flex;
+    .box {
+      background: #ffffff;
+      border: 2px solid #ccc;
+      padding: 20px;
+      margin: 20px auto;
+      width: 60%;
+      border-radius: 10px;
+      text-align: left;
+    }
+
+    .check {
+      font-size: 30px;
+      color: green;
+      margin-right: 8px;
     }
 
     .talk-box {
-      background: white;
-      padding: 20px;
-      border-radius: 10px;
-      margin-top: 20px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      margin-top: 40px;
     }
 
     .factura-popup {
@@ -84,11 +95,17 @@
     .factura-popup button {
       margin-top: 10px;
     }
+
+    h1 {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
   </style>
 </head>
 <body>
 
-  <!-- Toppmeny -->
   <div class="topbar">
     <div>
       <span>Visma Proceedo</span>
@@ -97,13 +114,11 @@
       <span>Fakturor</span>
       <span>Uppföljning</span>
     </div>
-    <div>
-      🛒
-    </div>
+    <div>🛒</div>
   </div>
 
-  <!-- Sida med meny till vänster -->
   <div class="container">
+    <!-- Meny till vänster -->
     <div class="sidebar">
       <h2>Att hantera</h2>
       <ul>
@@ -111,14 +126,27 @@
         <li><span>Ej skickade</span> <span>0</span></li>
         <li><span>Fakturor</span> <span id="antalFakturor">1</span></li>
         <li><span>Leveranser</span> <span>2</span></li>
-        <li><span>Varukorgar</span> <span>0</span></li>
+        <li><span>Varukorgar</span> <span>1</span></li>
       </ul>
     </div>
 
+    <!-- Huvudinnehåll -->
     <div class="main">
-      <h1>Hej, jag är Tom 🧠</h1>
+      <h1>🛒 Din varukorg</h1>
+
+      <div class="box" id="produktBox">
+        <strong>Produkter:</strong>
+        <div id="produkt">-</div>
+      </div>
+
+      <div class="box">
+        <strong>Leverans till:</strong>
+        <div id="chef">-</div>
+        <div id="adress">-</div>
+      </div>
+
       <div class="talk-box">
-        <p>Klicka och säg <strong>"Visa mig fakturan"</strong></p>
+        <p><strong>Säg: "Visa mig fakturan"</strong></p>
         <button onclick="startListening()">🎤 Prata med Tom</button>
       </div>
     </div>
@@ -132,9 +160,34 @@
   </div>
 
   <script>
+    // 🧠 Hämta data från localStorage
+    const produkter = JSON.parse(localStorage.getItem("produkter")) || [];
+    const chef = localStorage.getItem("mottagareNamn") || "Okänd chef";
+    const adress = localStorage.getItem("mottagareAdress") || "Okänd adress";
+
+    // Visa produkterna
+    const produktEl = document.getElementById("produkt");
+    if (produkter.length > 0) {
+      produktEl.innerHTML = produkter.map(p => `✅ ${p}`).join("<br>");
+    } else {
+      produktEl.innerText = "-";
+    }
+
+    // Visa chef och adress
+    document.getElementById("chef").innerText = chef;
+    document.getElementById("adress").innerText = adress;
+
+    // Tom pratar automatiskt
+    const tts = new SpeechSynthesisUtterance(
+      `Jag har lagt ${produkter.join(", ")} i korgen. Leveransen går till ${chef} på ${adress}.`
+    );
+    tts.lang = "sv-SE";
+    speechSynthesis.speak(tts);
+
+    // 🎤 Röststyrning
     function startListening() {
       if (!('webkitSpeechRecognition' in window)) {
-        alert("Din webbläsare stöder inte röstigenkänning.");
+        alert("Din webbläsare stöder inte röststyrning.");
         return;
       }
 
@@ -145,14 +198,13 @@
 
       recognition.onresult = function(event) {
         const text = event.results[0][0].transcript.toLowerCase();
-        console.log("Du sa:", text);
-
         if (text.includes("visa mig fakturan")) {
           const antal = parseInt(document.getElementById("antalFakturor").innerText, 10);
           if (antal > 0) {
+            säg("Här är den senaste fakturan.");
             visaFaktura();
           } else {
-            säg("Det finns inga fakturor att visa.");
+            säg("Det finns inga fakturor just nu.");
           }
         } else {
           säg("Jag förstod inte vad du sa.");
@@ -173,7 +225,6 @@
     }
 
     function visaFaktura() {
-      säg("Här är den senaste fakturan.");
       document.getElementById("fakturaRuta").style.display = "block";
     }
 
