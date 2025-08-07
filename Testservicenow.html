@@ -2,94 +2,71 @@
 <html lang="sv">
 <head>
   <meta charset="UTF-8" />
-  <title>Testservicenow</title>
+  <title>TestServiceNow</title>
   <style>
     body {
       font-family: sans-serif;
       background-color: #eef7ff;
+      max-width: 600px;
+      margin: 40px auto;
       text-align: center;
-      padding: 40px;
     }
-
-    input, textarea, button {
+    input, button {
       padding: 10px;
+      margin: 10px auto;
       font-size: 16px;
       width: 80%;
-      margin: 10px auto;
       display: block;
     }
-
-    #tom-emoji {
+    .agent {
       font-size: 80px;
       margin-bottom: 10px;
-    }
-
-    #bubbla {
-      font-style: italic;
-      font-size: 18px;
-      color: #333;
-      margin-bottom: 20px;
-      min-height: 30px;
-    }
-
-    .fältcontainer {
-      background: white;
-      padding: 20px;
-      border-radius: 8px;
-      max-width: 600px;
-      margin: auto;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
     }
   </style>
 </head>
 <body>
 
-  <div class="fältcontainer">
-    <div id="tom-emoji">🤖</div>
-    <div id="bubbla">Säg din beställning!</div>
-
-    <textarea id="beskrivning" rows="3">
-Iphone 15, Gatan 2, mottagande chef Anna Larsson, ansvarskod 12345
-    </textarea>
-    <button onclick="tolkaOchSkicka()">Tolka & Gå vidare</button>
-  </div>
+  <div class="agent" id="tom">🤖</div>
+  <h2>Beskriv beställningen</h2>
+  <input id="beskrivning" type="text" value="Iphone 15, Gatan 2, mottagande chef Anna Larsson" />
+  <button onclick="tolkaBeställning()">Tolka</button>
 
   <script>
-    function tolkaOchSkicka() {
-      const beskrivning = document.getElementById("beskrivning").value;
+    function speak(text) {
+      const u = new SpeechSynthesisUtterance(text);
+      u.lang = "sv-SE";
+      speechSynthesis.speak(u);
+    }
 
-      const produktMatch = beskrivning.match(/iphone\s*15/i);
-      const adressMatch = beskrivning.match(/gatan\s*\d+/i);
-      const chefMatch = beskrivning.match(/chef\s+([a-zåäö\s]+)/i);
-      const ansvarskodMatch = beskrivning.match(/ansvarskod\s+(\d+)/i);
+    function tolkaBeställning() {
+      const text = document.getElementById("beskrivning").value.toLowerCase();
+      const artiklar = [];
+      let adress = "";
+      let chef = "";
 
-      const emoji = document.getElementById("tom-emoji");
-      const bubbla = document.getElementById("bubbla");
+      // Hämta artiklar
+      if (text.includes("iphone 15")) artiklar.push("iPhone 15");
+      if (text.includes("airpods")) artiklar.push("AirPods Pro");
+      if (text.includes("galaxy s24")) artiklar.push("Samsung Galaxy S24");
 
-      if (produktMatch && adressMatch && chefMatch) {
-        const produkt = produktMatch[0];
-        const adress = adressMatch[0];
-        const chef = chefMatch[1].trim();
-        const ansvarskod = ansvarskodMatch ? ansvarskodMatch[1] : "";
+      // Hämta adress
+      const adressMatch = text.match(/gatan\s\d+/i);
+      if (adressMatch) adress = adressMatch[0];
 
-        emoji.innerText = "😄";
-        bubbla.innerText = "Jag lägger varorna i korgen!";
+      // Hämta chef
+      const chefMatch = text.match(/chef\s([a-zåäö\s]+)/i);
+      if (chefMatch) chef = chefMatch[1].trim();
 
-        const prat = new SpeechSynthesisUtterance("Jag lägger varorna i korgen!");
-        prat.lang = "sv-SE";
-        speechSynthesis.speak(prat);
-
-        prat.onend = () => {
-          const query = `?produkt=${encodeURIComponent(produkt)}&adress=${encodeURIComponent(adress)}&chef=${encodeURIComponent(chef)}&ansvarskod=${encodeURIComponent(ansvarskod)}`;
-          window.location.href = "varukorg.html" + query;
-        };
-
+      if (artiklar.length > 0) {
+        localStorage.setItem("artiklar", JSON.stringify(artiklar));
+        localStorage.setItem("mottagare", `${chef}, ${adress}`);
+        speak("Jag lägger varorna i korgen");
+        setTimeout(() => {
+          window.location.href = "varukorg.html";
+        }, 1500);
       } else {
-        emoji.innerText = "😠";
-        bubbla.innerText = "Men vad menar du nu?";
-        const felmeddelande = new SpeechSynthesisUtterance("Men vad menar du nu?");
-        felmeddelande.lang = "sv-SE";
-        speechSynthesis.speak(felmeddelande);
+        speak("Men vad menar du nu?");
+        document.getElementById("tom").innerText = "😠";
       }
     }
   </script>
