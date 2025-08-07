@@ -1,107 +1,53 @@
+
+
 <!DOCTYPE html>
 <html lang="sv">
 <head>
-  <meta charset="UTF-8" />
-  <title>Test ServiceNow</title>
+  <meta charset="UTF-8">
+  <title>TestServiceNow</title>
   <style>
-    body {
-      font-family: sans-serif;
-      background-color: #eef7ff;
-      text-align: center;
-      margin: 50px auto;
-      max-width: 600px;
-    }
-    textarea, button {
-      width: 90%;
-      padding: 15px;
-      font-size: 16px;
-      margin-top: 20px;
-    }
-    .agent {
-      font-size: 80px;
-      margin-bottom: 10px;
-      transition: transform 0.3s ease;
-    }
-    .feedback {
-      font-size: 16px;
-      margin-top: 10px;
-      color: #333;
-    }
+    body { font-family: sans-serif; text-align: center; background: #f0f8ff; padding: 40px; }
+    input, button { padding: 12px; font-size: 16px; width: 80%; margin: 10px auto; display: block; }
+    .agent { font-size: 80px; margin-bottom: 10px; }
   </style>
 </head>
 <body>
-
   <div class="agent" id="tom-emoji">🤖</div>
-  <h1>Test ServiceNow</h1>
-  <p>Fyll i din beställning i beskrivningsfältet:</p>
-
-  <textarea id="beskrivning" placeholder="Ex: Iphone 15, Gatan 2, mottagande chef Anna Larsson, ansvarskod 12345"></textarea>
-  <button onclick="tolkaBeskrivning()">Tolka beställning</button>
-
-  <div class="feedback" id="feedback-text"></div>
+  <h1>TestServiceNow</h1>
+  <p>Fyll i beskrivningen:</p>
+  <input type="text" id="beskrivning" placeholder="Ex: iPhone 15, Gatan 2, mottagande chef Anna Larsson, ansvarskod 12345" />
+  <button onclick="tolka()">Tolka & skicka</button>
 
   <script>
-    function tolkaBeskrivning() {
-      const text = document.getElementById("beskrivning").value.toLowerCase();
-      const emoji = document.getElementById("tom-emoji");
-      const feedback = document.getElementById("feedback-text");
+    function tolka() {
+      const input = document.getElementById("beskrivning").value;
 
-      let produkt = "";
-      let adress = "";
-      let chef = "";
-      let kod = "";
+      // Grundläggande tolkning
+      const produktMatch = input.match(/iphone ?15|airpods|galaxy s24/i);
+      const adressMatch = input.match(/\b(?:[A-ZÅÄÖ][a-zåäö]+ ?\d*)/g);
+      const chefMatch = input.match(/chef ([A-ZÅÄÖ][a-zåäö]+ [A-ZÅÄÖ][a-zåäö]+)/i);
 
-      // Enkel tolkning
-      if (text.includes("iphone 15")) {
-        produkt = "iPhone 15";
-      } else if (text.includes("iphone 150")) {
-        emoji.innerText = "😠";
-        feedback.innerText = "😠 Men vad gör du nu? Jag hittar ingen vara med det namnet.";
-        speak("Men vad gör du nu?");
-        return;
+      const produkt = produktMatch ? produktMatch[0] : "";
+      const adress = adressMatch && adressMatch.length > 1 ? adressMatch[1] : "";
+      const chef = chefMatch ? chefMatch[1] : "";
+
+      if (produkt && adress && chef) {
+        document.getElementById("tom-emoji").innerText = "✅";
+        const tts = new SpeechSynthesisUtterance("Jag lägger varorna i korgen");
+        tts.lang = "sv-SE";
+        speechSynthesis.speak(tts);
+
+        // Skicka vidare med info i URL
+        setTimeout(() => {
+          window.location.href = `varukorg.html?produkt=${encodeURIComponent(produkt)}&adress=${encodeURIComponent(adress)}&chef=${encodeURIComponent(chef)}`;
+        }, 2000);
       } else {
-        emoji.innerText = "😠";
-        feedback.innerText = "😠 Okänd produkt.";
-        speak("Jag förstod inte vilken produkt du menar.");
-        return;
+        document.getElementById("tom-emoji").innerText = "😠";
+        const tts = new SpeechSynthesisUtterance("Jag förstår inte. Kontrollera din beskrivning.");
+        tts.lang = "sv-SE";
+        speechSynthesis.speak(tts);
       }
-
-      // Tolkning av adress
-      const adressMatch = text.match(/gatan\s*\d+/);
-      if (adressMatch) adress = adressMatch[0];
-
-      // Tolkning av chef
-      const chefMatch = text.match(/chef\s+([a-zåäö\s]+)/);
-      if (chefMatch) chef = chefMatch[1].trim();
-
-      // Tolkning av ansvarskod
-      const kodMatch = text.match(/ansvarskod\s*(\d+)/);
-      if (kodMatch) kod = kodMatch[1];
-
-      emoji.innerText = "😄";
-      feedback.innerText = `✅ Jag lägger varorna i korgen...`;
-
-      speak("Jag lägger varorna i korgen");
-
-      // Skicka till bestallning.html
-      const query = new URLSearchParams({
-        produkt: produkt,
-        adress: adress,
-        chef: chef,
-        kod: kod
-      });
-
-      setTimeout(() => {
-        window.location.href = "bestallning.html?" + query.toString();
-      }, 2500);
-    }
-
-    function speak(text) {
-      const uttal = new SpeechSynthesisUtterance(text);
-      uttal.lang = "sv-SE";
-      speechSynthesis.speak(uttal);
     }
   </script>
-
 </body>
 </html>
