@@ -82,6 +82,7 @@
       padding: 10px 20px;
       font-size: 16px;
       margin-top: 10px;
+      cursor: pointer;
     }
 
     #voiceStatus {
@@ -151,9 +152,8 @@
         <p><strong>Säg:</strong> "Visa mig fakturan" eller "Skicka mejl"</p>
         <button onclick="startListening()">🎤 Prata med Tom</button>
         <p id="voiceStatus"></p>
-        <br>
-        <button onclick="visaFaktura()">📄 Visa fakturan</button>
-        <button onclick="öppnaOutlookMejl()">📧 Skicka mejl</button>
+        <button onclick="visaFaktura()">📄 Visa faktura</button>
+        <button onclick="skickaMailOchTele3()">📧 Skicka mejl</button>
       </div>
     </div>
   </div>
@@ -176,7 +176,6 @@
     document.getElementById("chef").innerText = chef;
     document.getElementById("adress").innerText = adress;
 
-    // 🗣️ Tom pratar
     const tts = new SpeechSynthesisUtterance(
       `Jag har lagt ${produkter.join(", ")} i korgen. Leveransen går till ${adress}, till ${chef}.`
     );
@@ -184,7 +183,6 @@
     speechSynthesis.cancel();
     speechSynthesis.speak(tts);
 
-    // 🎤 Röstigenkänning
     window.SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     const recognition = new SpeechRecognition();
     recognition.lang = "sv-SE";
@@ -200,11 +198,10 @@
       document.getElementById("voiceStatus").innerText = `📢 Du sa: "${transcript}"`;
 
       if (transcript.includes("skicka mejl")) {
-        speechSynthesis.cancel();
-        const tts2 = new SpeechSynthesisUtterance(`Jag skickar mejlet nu till ${chef}`);
+        const tts2 = new SpeechSynthesisUtterance(`Nu skickar jag mejlet till ${chef}`);
         tts2.lang = "sv-SE";
         tts2.onend = () => {
-          öppnaOutlookMejl();
+          skickaMailOchTele3();
         };
         speechSynthesis.speak(tts2);
       }
@@ -233,6 +230,21 @@
       window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
     }
 
+    function skickaTillTele3() {
+      const data = {
+        produkter,
+        mottagare: chef,
+        adress,
+        datum: new Date().toISOString()
+      };
+      localStorage.setItem("tele3_bestallning", JSON.stringify(data));
+    }
+
+    function skickaMailOchTele3() {
+      öppnaOutlookMejl();
+      skickaTillTele3();
+    }
+
     function visaFaktura() {
       document.getElementById("fakturaModal").style.display = "block";
     }
@@ -240,14 +252,6 @@
     function stängFaktura() {
       document.getElementById("fakturaModal").style.display = "none";
     }
-
-    // 🛰️ Skicka automatiskt till Tele3-portalen i bakgrunden
-    const orderData = {
-      chef,
-      adress,
-      produkter
-    };
-    localStorage.setItem("tele3Order", JSON.stringify(orderData));
   </script>
 </body>
 </html>
