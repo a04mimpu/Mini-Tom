@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8">
+  <title>Test ServiceNow</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      background: #f5fff5;
+      padding: 40px;
+    }
+
+    h1 {
+      color: #1e6f3d;
+    }
+
+    textarea {
+      width: 100%;
+      height: 120px;
+      padding: 10px;
+      font-size: 16px;
+      margin-top: 20px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+
+    button {
+      margin-top: 20px;
+      padding: 12px 24px;
+      font-size: 16px;
+      background-color: #1e6f3d;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #14582d;
+    }
+
+    #status {
+      margin-top: 20px;
+      font-style: italic;
+      color: #555;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>🧾 Beställning via ServiceNow</h1>
+
+  <label for="beskrivning"><strong>Beskrivning (t.ex. "Iphone 15, Gatan 2, mottagare Anna Larsson"):</strong></label>
+  <textarea id="beskrivning" placeholder="Skriv in din beställning här..."></textarea>
+
+  <br>
+  <button onclick="tolkaOchGåVidare()">Tolka och gå vidare</button>
+
+  <div id="status"></div>
+
+  <script>
+    function tolkaOchGåVidare() {
+      const beskrivning = document.getElementById("beskrivning").value;
+
+      // 🔍 Enkel tolkning (simulerad – här kan du lägga in din riktiga tolkning)
+      const produkter = ["iPhone 15"];
+      const chef = "Anna Larsson";
+      const adress = "Gatan 2";
+
+      // 💾 Spara i localStorage
+      localStorage.setItem("produkter", JSON.stringify(produkter));
+      localStorage.setItem("mottagareNamn", chef);
+      localStorage.setItem("mottagareAdress", adress);
+
+      // 🗣️ Tom pratar
+      const tts = new SpeechSynthesisUtterance("Jag skickar dig vidare till varukorgen.");
+      tts.lang = "sv-SE";
+      tts.onend = () => {
+        window.location.href = "varukorg.html";
+      };
+
+      // 🧹 Stoppa tidigare tal om något körs
+      speechSynthesis.cancel();
+      speechSynthesis.speak(tts);
+
+      document.getElementById("status").innerText = "🔄 Tolkar och skickar vidare...";
+    }
+  </script>
+
+</body>
+</html>
