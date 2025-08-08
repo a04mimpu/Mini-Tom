@@ -2,24 +2,26 @@
 <html lang="sv">
 <head>
   <meta charset="UTF-8">
-  <title>Tom – Dashboard</title>
+  <title>Toms Dashboard</title>
   <style>
     body {
       font-family: Arial, sans-serif;
       padding: 30px;
       background-color: #f7f7f7;
     }
-.ai-command-box {
-  background: white;
-  padding: 20 px;
-  border-radius: 12px;
-  box-shadow 0 2px 6px rgba(0,0,0,0.1);
-  max-width: 600px;
-  margin-bottom: 20px;
-}
-  input[type="text] {
-    width: 80%
-    padding: 10px;
+
+    .ai-command-box {
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      max-width: 600px;
+      margin-bottom: 20px;
+    }
+
+    input[type="text"] {
+      width: 80%;
+      padding: 10px;
       font-size: 16px;
       margin-top: 8px;
     }
@@ -30,11 +32,19 @@
       margin-top: 8px;
       cursor: pointer;
     }
-#aiResponse {
-   margin-top: 10px;
+
+    #aiResponse {
+      margin-top: 10px;
       font-weight: bold;
     }
-ul#orderList li {background: #fff;
+
+    ul#orderList {
+      list-style: none;
+      padding-left: 0;
+    }
+
+    ul#orderList li {
+      background: #fff;
       margin: 5px 0;
       padding: 10px;
       border-left: 5px solid #4CAF50;
@@ -43,55 +53,53 @@ ul#orderList li {background: #fff;
   </style>
 </head>
 <body>
-    <h1>📊 Toms Dashboard</h1>
-<div class="ai-command-box">
+
+  <h1>📊 Toms Dashboard</h1>
+
+  <div class="ai-command-box">
     <label for="aiCommand">🧠 Skriv ett kommando:</label><br>
     <input type="text" id="aiCommand" placeholder="T.ex. 'Visa alla beställningar från Anna Larsson'">
     <button onclick="processCommand()">Skicka</button>
   </div>
+
   <div id="aiResponse"></div>
   <ul id="orderList"></ul>
 
   <script>
     function processCommand() {
-      const input = document.getElementyById("aiCommand").value.toLowerCase();
-      const responseBox = document.getElementById("aiReponse");
-      const orderList = document.getElementById("orderLst");
+      const input = document.getElementById("aiCommand").value.toLowerCase();
+      const responseBox = document.getElementById("aiResponse");
+      const orderList = document.getElementById("orderList");
 
-      orderList.innerHTML =; //Töm listan
+      orderList.innerHTML = ""; // Töm listan
 
-      if (input.includes("Visa alla beställningar från")) {
+      if (input.includes("visa alla beställningar från")) {
         const namn = input.split("från")[1].trim();
+        console.log("Du söker efter beställningar från:", namn);
 
-//Läs sparade bestälningar
         const savedOrders = JSON.parse(localStorage.getItem("orders")) || [];
+        console.log("Alla sparade orders:", savedOrders);
+
         const filtrerade = savedOrders.filter(order =>
-          order.chef && order.chef.toLowerCases().includes(namn)
-      );
-        if (filtrerade.length) > 0) {
+          order.chef && order.chef.toLowerCase().includes(namn.toLowerCase())
+        );
+        console.log("Filtrerade träffar:", filtrerade);
+
+        if (filtrerade.length > 0) {
           responseBox.innerText = `📦 Visar ${filtrerade.length} beställning(ar) från ${namn}:`;
           filtrerade.forEach(order => {
             const item = document.createElement("li");
-            item.innerText =  `🛒 ${order.produkt} x${order.antal} – ${order.chef}, ${order.adress}`;
-            orderList.appenChild(item);
+            item.innerText = `🛒 ${order.produkt} x${order.antal} – ${order.chef}, ${order.adress}`;
+            orderList.appendChild(item);
           });
         } else {
-          responseBox.innertext = `😕 Hittade inga beställningar från ${namn}.`;
+          responseBox.innerText = `😕 Hittade inga beställningar från ${namn}.`;
+        }
+      } else {
+        responseBox.innerText = "❓ Jag förstod inte kommandot. Försök skriva: 'Visa alla beställningar från [namn]'.";
       }
-    } else {
-      responseBox.innerText = "❓ Jag förstod inte kommandot. Försök skriva: 'Visa alla beställningar från [namn]'.";
-      }
+    }
   </script>
-  </body>
+
+</body>
 </html>
-  
-    
-
-
-
-  
-
-
-
-  
-  
