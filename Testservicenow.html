@@ -112,10 +112,15 @@
     emoji.innerText = "😄";
     feedback.innerText = `Jag lade ${produkt} och tillbehör i varukorgen.`;
 
-    const svar = new SpeechSynthesisUtterance(`Javisst! Jag lade till ${produkt} och tillbehören.`);
+   // const svar = new SpeechSynthesisUtterance(`Javisst! Jag lade till ${produkt} och tillbehören.`);
     svar.lang = "sv-SE";
-    speechSynthesis.speak(svar);
+    speechSynthesis.speak(svar);//
 
+const tts = new SpeechSynthesisUtterance(
+  "Jag skickar dig nu till varukorgen."
+);
+
+    
     const items = [`${produkt}`, ...tillbehör];
     cart.innerHTML = "";
     items.forEach(item => {
