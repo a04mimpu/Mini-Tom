@@ -233,6 +233,15 @@
         `Hej ${chef},\n\nFöljande produkter har beställts:\n\n- ${produkter.join("\n- ")}\n\nLeveransadress:\n${adress}\n\nVänliga hälsningar,\nTom – AI-assistent`
       );
 
+      const orderData = {
+  orderId: Math.floor(1000 + Math.random() * 9000), // Slumpmässigt ordernummer
+  produkter,
+  chef,
+  adress,
+  datum: new Date().toLocaleString("sv-SE")
+};
+localStorage.setItem("tele3Order", JSON.stringify(orderData));
+
       window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
     }
 
