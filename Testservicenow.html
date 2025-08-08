@@ -114,6 +114,11 @@
 const tts = new SpeechSynthesisUtterance(
   "Jag skickar dig nu till varukorgen."
 );
+tts.lang = "sv-SE";
+tts.onend = () => {
+  window.location.href = "varukorg3.html";
+};
+speechSynthesis.speak(tts);
 
     
     const items = [`${produkt}`, ...tillbehör];
