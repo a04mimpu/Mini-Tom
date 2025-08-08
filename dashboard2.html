@@ -88,10 +88,21 @@
             orderList.appendChild(item);
           });
 
-          const tts = `Jag hittade ${filtrerade.length} beställningar från ${namn}.`;
-          const utterance = new SpeechSynthesisUtterance(tts);
-          utterance.lang = "sv-SE";
-          speechSynthesis.speak(utterance);
+         let tts = "";
+
+if (filtrerade.length === 1) {
+  tts = `Jag hittade en beställning från ${namn}.`;
+} else if (filtrerade.length >= 2 && filtrerade.length <= 4) {
+  tts = `Jag hittade några beställningar från ${namn}.`;
+} else if (filtrerade.length >= 5) {
+  tts = `Oj! Jag hittade många beställningar från ${namn}!`;
+}
+
+if (tts) {
+  const utterance = new SpeechSynthesisUtterance(tts);
+  utterance.lang = "sv-SE";
+  speechSynthesis.speak(utterance);
+}
 
         } else {
           responseBox.innerText = `😕 Hittade inga beställningar från ${namn}.`;
