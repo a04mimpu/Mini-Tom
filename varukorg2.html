@@ -1,3 +1,5 @@
+
+
 <!DOCTYPE html>
 <html lang="sv">
 <head>
@@ -9,13 +11,11 @@
       font-family: sans-serif;
       background: #f9fdf9;
     }
-
     .topnav {
       background-color: #1e6f3d;
       overflow: hidden;
       display: flex;
     }
-
     .topnav div {
       color: white;
       padding: 14px 20px;
@@ -23,15 +23,12 @@
       cursor: pointer;
       border-right: 1px solid #14582d;
     }
-
     .topnav div:last-child {
       border-right: none;
     }
-
     .main {
       display: flex;
     }
-
     .menu {
       background: #1e6f3d;
       color: white;
@@ -39,32 +36,26 @@
       padding: 30px 10px;
       height: 100vh;
     }
-
     .menu h2 {
       margin-top: 0;
       font-size: 20px;
     }
-
     .menu ul {
       list-style: none;
       padding: 0;
     }
-
     .menu li {
       margin: 20px 0;
       cursor: pointer;
     }
-
     .content {
       flex: 1;
       padding: 40px;
     }
-
     h1 {
       font-size: 28px;
       margin-bottom: 20px;
     }
-
     .box {
       background: #e9ffe9;
       border: 1px solid #b7e1b7;
@@ -72,24 +63,20 @@
       margin-bottom: 20px;
       border-radius: 8px;
     }
-
     .check {
       font-size: 30px;
       color: green;
     }
-
     button {
       padding: 10px 20px;
       font-size: 16px;
       margin-top: 10px;
     }
-
     #voiceStatus {
       margin-top: 20px;
       font-style: italic;
       color: #555;
     }
-
     #fakturaModal {
       display: none;
       position: fixed;
@@ -102,14 +89,12 @@
       border: 2px solid green;
       box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.3);
     }
-
     #fakturaModal button {
       margin-top: 10px;
     }
   </style>
 </head>
 <body>
-
   <div class="topnav">
     <div>Visma Proceedo</div>
     <div>Inköp</div>
@@ -117,7 +102,6 @@
     <div>Fakturor</div>
     <div>Uppföljning</div>
   </div>
-
   <div class="main">
     <div class="menu">
       <h2>📋 Meny</h2>
@@ -127,15 +111,12 @@
         <li>📦 Leveranser</li>
       </ul>
     </div>
-
     <div class="content">
       <h1>Din varukorg 🛒</h1>
-
       <div class="box">
         <div class="check">✅</div>
         <div><strong>Produkter:</strong><br><span id="produkt">-</span></div>
       </div>
-
       <div class="box">
         <strong>Leveransadress:</strong>
         <div id="adress">-</div>
@@ -143,17 +124,13 @@
         <strong>Mottagare:</strong>
         <div id="chef">-</div>
       </div>
-
       <div class="voice-box">
         <p><strong>Säg:</strong> "Visa mig fakturan" eller "Skicka mejl"</p>
         <button onclick="startListening()">🎤 Prata med Tom</button>
-        <button onclick="skickaMailOchTele3()">✉️ Skicka mejl</button>
-        <button onclick="visaFaktura()">📄 Visa faktura</button>
         <p id="voiceStatus"></p>
       </div>
     </div>
   </div>
-
   <div id="fakturaModal">
     <h2>Faktura</h2>
     <p>Fakturan gäller beställning #3471</p>
@@ -161,7 +138,6 @@
     <p>Förfallodatum: 2025-09-01</p>
     <button onclick="stängFaktura()">Stäng</button>
   </div>
-
   <script>
     const produkter = JSON.parse(localStorage.getItem("produkter")) || [];
     const chef = localStorage.getItem("mottagareNamn") || "Anna Larsson";
@@ -172,39 +148,28 @@
     document.getElementById("adress").innerText = adress;
 
     const tts = new SpeechSynthesisUtterance(
-      `Jag har lagt ${produkter.join(", ")} i korgen. Leveransen går till ${adress}, till ${chef}.`
+      `Jag har lagt ${produkter.join(", ")} i korgen. Leveransen går till ${adress}, till ${chef}. Nu skickar jag mejlet.`
     );
     tts.lang = "sv-SE";
+    tts.onend = () => {
+      skickaMailOchTele3();
+    };
     speechSynthesis.cancel();
     speechSynthesis.speak(tts);
-
-    // Röststyrning
-    window.SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    const recognition = new SpeechRecognition();
-    recognition.lang = "sv-SE";
-    recognition.continuous = false;
 
     function startListening() {
       speechSynthesis.cancel();
       recognition.start();
     }
 
+    window.SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const recognition = new SpeechRecognition();
+    recognition.lang = "sv-SE";
+    recognition.continuous = false;
+
     recognition.onresult = (event) => {
       const transcript = event.results[0][0].transcript.toLowerCase();
       document.getElementById("voiceStatus").innerText = `📢 Du sa: "${transcript}"`;
-
-      if (transcript.includes("skicka mejl")) {
-        const tts2 = new SpeechSynthesisUtterance(`Nu skickar jag mejlet till ${chef}`);
-        tts2.lang = "sv-SE";
-        speechSynthesis.speak(tts2);
-
-        tts2.onend = () => {
-          setTimeout(() => {
-            skickaMailOchTele3();
-          }, 200);
-        };
-      }
-
       if (transcript.includes("visa fakturan")) {
         visaFaktura();
       }
@@ -214,7 +179,7 @@
       document.getElementById("voiceStatus").innerText = "⚠️ Något gick fel med röstigenkänningen.";
     };
 
-    function öppnaOutlookMejl() {
+    function skickaMailOchTele3() {
       const email = chef
         .toLowerCase()
         .replace(/[åä]/g, 'a')
@@ -223,25 +188,34 @@
 
       const subject = encodeURIComponent("Beställning från Tom");
       const body = encodeURIComponent(
-        `Hej ${chef},\n\nFöljande produkter har beställts:\n\n- ${produkter.join("\n- ")}\n\nLeveransadress:\n${adress}\n\nVänliga hälsningar,\nTom – AI-assistent`
+        `Hej ${chef},
+
+Följande produkter har beställts:
+
+- ${produkter.join("
+- ")}
+
+Leveransadress:
+${adress}
+
+Vänliga hälsningar,
+Tom – AI-assistent`
       );
 
       window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
-    }
 
-    function skickaMailOchTele3() {
-      öppnaOutlookMejl();
-
-      // Skicka beställning till Tele3 i bakgrunden
-      fetch('https://example.com/tele3-api', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      fetch("tele3-bestallningar.json", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify({
-          mottagare: chef,
+          produkter: produkter,
+          chef: chef,
           adress: adress,
-          produkter: produkter
-        })
-      }).then(res => console.log('Skickat till Tele3')).catch(err => console.error('Fel vid Tele3:', err));
+          timestamp: new Date().toISOString(),
+        }),
+      });
     }
 
     function visaFaktura() {
