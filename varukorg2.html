@@ -1,6 +1,3 @@
-
-
-
 <!DOCTYPE html>
 <html lang="sv">
 <head>
@@ -85,7 +82,6 @@
       padding: 10px 20px;
       font-size: 16px;
       margin-top: 10px;
-      margin-right: 10px;
     }
 
     #voiceStatus {
@@ -154,9 +150,10 @@
       <div class="voice-box">
         <p><strong>Säg:</strong> "Visa mig fakturan" eller "Skicka mejl"</p>
         <button onclick="startListening()">🎤 Prata med Tom</button>
-        <button onclick="öppnaOutlookMejl()">📧 Skicka mejl manuellt</button>
-        <button onclick="visaFaktura()">📄 Visa faktura manuellt</button>
         <p id="voiceStatus"></p>
+        <br>
+        <button onclick="visaFaktura()">📄 Visa fakturan</button>
+        <button onclick="öppnaOutlookMejl()">📧 Skicka mejl</button>
       </div>
     </div>
   </div>
@@ -194,7 +191,7 @@
     recognition.continuous = false;
 
     function startListening() {
-      speechSynthesis.cancel(); // Stoppa eventuell pågående talsyntes
+      speechSynthesis.cancel();
       recognition.start();
     }
 
@@ -233,15 +230,6 @@
         `Hej ${chef},\n\nFöljande produkter har beställts:\n\n- ${produkter.join("\n- ")}\n\nLeveransadress:\n${adress}\n\nVänliga hälsningar,\nTom – AI-assistent`
       );
 
-      const orderData = {
-  orderId: Math.floor(1000 + Math.random() * 9000), // Slumpmässigt ordernummer
-  produkter,
-  chef,
-  adress,
-  datum: new Date().toLocaleString("sv-SE")
-};
-localStorage.setItem("tele3Order", JSON.stringify(orderData));
-
       window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
     }
 
@@ -252,6 +240,14 @@ localStorage.setItem("tele3Order", JSON.stringify(orderData));
     function stängFaktura() {
       document.getElementById("fakturaModal").style.display = "none";
     }
+
+    // 🛰️ Skicka automatiskt till Tele3-portalen i bakgrunden
+    const orderData = {
+      chef,
+      adress,
+      produkter
+    };
+    localStorage.setItem("tele3Order", JSON.stringify(orderData));
   </script>
 </body>
 </html>
