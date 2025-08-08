@@ -50,7 +50,7 @@
 
   <script>
     const orderBox = document.getElementById("orderBox");
-    const order = JSON.parse(localStorage.getItem("tele3Order"));
+    const order = JSON.parse(localStorage.getItem("telebeställningar"));
 
     if (order && order.produkter && order.produkter.length > 0) {
       orderBox.innerHTML = `
