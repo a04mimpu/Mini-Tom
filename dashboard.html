@@ -51,6 +51,40 @@ ul#orderList li {background: #fff;
   </div>
   <div id="aiResponse"></div>
   <ul id="orderList"></ul>
+
+  <script>
+    fuction processCommand() {
+      const input = document.getElementyById("aiCommand").value.toLowerCase();
+      const responseBox = document.getElementById("aiReponse");
+      const orderList = document.getElementById("orderLst");
+
+      orderList.innerHTML =; //Töm listan
+
+      if (input.includes("Visa alla beställningar från")) {
+        const namn = input.split("från")[1].trim();
+
+//Läs sparade bestälningar
+        const savedOrders = JSON.parse(localStorage.getItem("orders")) || [];
+
+
+
+
+
+
+
+        
+
+
+      
+
+
+
+      
+      
+
+
+    
+  </script>
   
     
 
