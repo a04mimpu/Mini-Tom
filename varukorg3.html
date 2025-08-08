@@ -1,0 +1,224 @@
+
+
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8" />
+  <title>Varukorg</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: sans-serif;
+      background: #f9fdf9;
+    }
+    .topnav {
+      background-color: #1e6f3d;
+      overflow: hidden;
+      display: flex;
+    }
+    .topnav div {
+      color: white;
+      padding: 14px 20px;
+      text-align: center;
+      cursor: pointer;
+      border-right: 1px solid #14582d;
+    }
+    .topnav div:last-child {
+      border-right: none;
+    }
+    .main {
+      display: flex;
+    }
+    .menu {
+      background: #1e6f3d;
+      color: white;
+      width: 200px;
+      padding: 30px 10px;
+      height: 100vh;
+    }
+    .menu h2 {
+      margin-top: 0;
+      font-size: 20px;
+    }
+    .menu ul {
+      list-style: none;
+      padding: 0;
+    }
+    .menu li {
+      margin: 20px 0;
+      cursor: pointer;
+    }
+    .content {
+      flex: 1;
+      padding: 40px;
+    }
+    h1 {
+      font-size: 28px;
+      margin-bottom: 20px;
+    }
+    .box {
+      background: #e9ffe9;
+      border: 1px solid #b7e1b7;
+      padding: 20px;
+      margin-bottom: 20px;
+      border-radius: 8px;
+    }
+    .check {
+      font-size: 30px;
+      color: green;
+    }
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      margin-top: 10px;
+    }
+    #voiceStatus {
+      margin-top: 20px;
+      font-style: italic;
+      color: #555;
+    }
+    #fakturaModal {
+      display: none;
+      position: fixed;
+      z-index: 99;
+      left: 50%;
+      top: 30%;
+      transform: translate(-50%, -30%);
+      background: white;
+      padding: 20px;
+      border: 2px solid green;
+      box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.3);
+    }
+    #fakturaModal button {
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="topnav">
+    <div>Visma Proceedo</div>
+    <div>Inköp</div>
+    <div>Alla beställningar</div>
+    <div>Fakturor</div>
+    <div>Uppföljning</div>
+  </div>
+
+  <div class="main">
+    <div class="menu">
+      <h2>📋 Meny</h2>
+      <ul>
+        <li>✅ Varukorg</li>
+        <li>📄 Fakturor</li>
+        <li>📦 Leveranser</li>
+      </ul>
+    </div>
+
+    <div class="content">
+      <h1>Din varukorg 🛒</h1>
+      <div class="box">
+        <div class="check">✅</div>
+        <div><strong>Produkter:</strong><br><span id="produkt">-</span></div>
+      </div>
+      <div class="box">
+        <strong>Leveransadress:</strong>
+        <div id="adress">-</div>
+        <br>
+        <strong>Mottagare:</strong>
+        <div id="chef">-</div>
+      </div>
+      <div class="voice-box">
+        <p><strong>Tom:</strong> Läser upp beställningen och skickar mejl automatiskt</p>
+        <p id="voiceStatus"></p>
+        <p><em>Säg:</em> "Visa mig fakturan" eller "Skicka mejl"</p>
+        <div style="margin-top: 10px;">
+          <button onclick="startVoice()">🎙️ Prata med Tom</button>
+          <button onclick="skickaMailOchTele3()">📧 Skicka mejl manuellt</button>
+          <button onclick="visaFaktura()">📄 Visa faktura manuellt</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="fakturaModal">
+    <h2>Faktura</h2>
+    <p>Fakturan gäller beställning #3471</p>
+    <p>Summa: 4 289 kr</p>
+    <p>Förfallodatum: 2025-09-01</p>
+    <button onclick="stängFaktura()">Stäng</button>
+  </div>
+
+  <script>
+    const produkter = JSON.parse(localStorage.getItem("produkter")) || [];
+    const chef = localStorage.getItem("mottagareNamn") || "Anna Larsson";
+    const adress = localStorage.getItem("mottagareAdress") || "Gatan 2";
+
+    document.getElementById("produkt").innerHTML = produkter.map(p => `✅ ${p}`).join("<br>");
+    document.getElementById("chef").innerText = chef;
+    document.getElementById("adress").innerText = adress;
+
+    const tts = new SpeechSynthesisUtterance(
+      `Jag har lagt ${produkter.join(", ")} i korgen. Leveransen går till ${adress}, till ${chef}. Nu skickar jag mejlet.`
+    );
+    tts.lang = "sv-SE";
+    tts.onend = () => {
+      skickaMailOchTele3();
+    };
+    speechSynthesis.cancel();
+    speechSynthesis.speak(tts);
+
+    function skickaMailOchTele3() {
+      const email = chef.toLowerCase().replace(/[åä]/g, 'a').replace(/ö/g, 'o').replace(/\s+/g, '.') + "@example.se";
+      const subject = encodeURIComponent("Beställning från Tom");
+      const body = encodeURIComponent(
+        `Hej ${chef},
+
+Följande produkter har beställts:
+
+- ${produkter.join("
+- ")}
+
+Leveransadress:
+${adress}
+
+Vänliga hälsningar,
+Tom – AI-assistent`
+      );
+      window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
+      const tele3Beställningar = JSON.parse(localStorage.getItem("tele3Beställningar")) || [];
+      tele3Beställningar.push({ produkter, chef, adress, tid: new Date().toLocaleString() });
+      localStorage.setItem("tele3Beställningar", JSON.stringify(tele3Beställningar));
+    }
+
+    function startVoice() {
+      const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+      recognition.lang = "sv-SE";
+      recognition.start();
+      recognition.onresult = (event) => {
+        const transcript = event.results[0][0].transcript.toLowerCase();
+        document.getElementById("voiceStatus").innerText = `📢 Du sa: "${transcript}"`;
+        if (transcript.includes("visa fakturan")) {
+          visaFaktura();
+        } else if (transcript.includes("skicka mejl")) {
+          const tts2 = new SpeechSynthesisUtterance(`Nu skickar jag mejlet till ${chef}`);
+          tts2.lang = "sv-SE";
+          tts2.onend = () => {
+            skickaMailOchTele3();
+          };
+          speechSynthesis.speak(tts2);
+        }
+      };
+      recognition.onerror = () => {
+        document.getElementById("voiceStatus").innerText = "⚠️ Något gick fel med röstigenkänningen.";
+      };
+    }
+
+    function visaFaktura() {
+      document.getElementById("fakturaModal").style.display = "block";
+    }
+
+    function stängFaktura() {
+      document.getElementById("fakturaModal").style.display = "none";
+    }
+  </script>
+</body>
+</html>
