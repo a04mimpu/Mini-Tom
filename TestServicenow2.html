@@ -5,6 +5,7 @@
   <title>Test ServiceNow</title>
   <style>
     body {
+      
       font-family: sans-serif;
       background: #f5fff5;
       padding: 40px;
@@ -56,7 +57,66 @@
   <br>
   <button onclick="tolkaOchGåVidare()">Tolka och gå vidare</button>
 
-  <div id="status"></div>
+  <div id="status">
+
+<div class="container">
+    <h1>Test-Servicenow</h1>
+    <form id="proceedoForm">
+        <label for="user">Användare:</label>
+        <input type="text" id="user" name="user" required />
+
+        <label>
+            <input type="checkbox" id="no_email_notifications" name="no_email_notifications" />
+            Inga automatiska epostnotifieringar
+        </label>
+
+        <label for="contact_method">Kontaktmetod:</label>
+        <select id="contact_method" name="contact_method" required>
+            <option value="email">E-post</option>
+            <option value="phone">Telefon</option>
+            <option value="sms">SMS</option>
+        </select>
+
+        <label for="service">Tjänst:</label>
+        <input type="text" id="service" name="service" required />
+
+        <label for="service_offer">Tjänsterbjudande:</label>
+        <input type="text" id="service_offer" name="service_offer" required />
+
+        <label for="config_object">Konfigurationsobjekt:</label>
+        <input type="text" id="config_object" name="config_object" required />
+
+        <label for="assigned_group">Tilldelad grupp:</label>
+        <input type="text" id="assigned_group" name="assigned_group" required />
+
+        <label for="case_type">Ärendetyp:</label>
+        <input type="text" id="case_type" name="case_type" required />
+
+        <label for="title">Rubrik:</label>
+        <input type="text" id="title" name="title" required />
+
+        <label for="description">Beskrivning:</label>
+        <textarea id="description" name="description" rows="4">Vara: iPhone 15; Ansvarskod: 1234; Verksamhetskod: 5678; Ansvarig chef: Anna Andersson; Mottagare: Kalle Svensson; Adress: Gatan 1, Staden;
+</textarea>
+
+        <label for="contact_info">Kontaktuppgifter:</label>
+        <input type="text" id="contact_info" name="contact_info" required />
+
+        <label for="address">Adress:</label>
+        <input type="text" id="address" name="address" required />
+
+        <label for="organization">Organisation:</label>
+        <input type="text" id="organization" name="organization" required />
+
+        <button id="submitProceedo" type="button">Skicka till Proceedo</button>
+    </form>
+</div>
+
+
+
+
+    
+  </div>
 
   <script>
     function tolkaOchGåVidare() {
