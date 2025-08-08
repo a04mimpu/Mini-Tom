@@ -73,26 +73,14 @@ ul#orderList li {background: #fff;
           filtrerade.forEach(order => {
             const item = document.createElement("li");
             item.innerText =  `🛒 ${order.produkt} x${order.antal} – ${order.chef}, ${order.adress}`;
-          
-
-
-
-
-
-
-
-        
-
-
-      
-
-
-
-      
-      
-
-
-    
+            orderList.appenChild(item);
+          });
+        } else {
+          responseBox.innertext = `😕 Hittade inga beställningar från ${namn}.`;
+      }
+    } else {
+      responseBox.innerText = "❓ Jag förstod inte kommandot. Försök skriva: 'Visa alla beställningar från [namn]'.";
+      }
   </script>
   
     
