@@ -71,35 +71,35 @@
       const responseBox = document.getElementById("aiResponse");
       const orderList = document.getElementById("orderList");
 
-      orderList.innerHTML = ""; // Töm listan
+      orderList.innerHTML = "";
 
       if (input.includes("visa alla beställningar från")) {
         const namn = input.split("från")[1].trim();
-        console.log("Du söker efter beställningar från:", namn);
-
         const savedOrders = JSON.parse(localStorage.getItem("orders")) || [];
-        console.log("Alla sparade orders:", savedOrders);
-
         const filtrerade = savedOrders.filter(order =>
           order.chef && order.chef.toLowerCase().includes(namn.toLowerCase())
         );
-        console.log("Filtrerade träffar:", filtrerade);
 
-       if (filtrerade.length > 0) {
-  responseBox.innerText = `📦 Visar ${filtrerade.length} beställning(ar) från ${namn}:`;
-  filtrerade.forEach(order => {
-    const item = document.createElement("li");
-    item.innerText = `🛒 ${order.produkt} x${order.antal} – ${order.chef}, ${order.adress}`;
-    orderList.appendChild(item);
-  });
+        if (filtrerade.length > 0) {
+          responseBox.innerText = `📦 Visar ${filtrerade.length} beställning(ar) från ${namn}:`;
+          filtrerade.forEach(order => {
+            const item = document.createElement("li");
+            item.innerText = `🛒 ${order.produkt} x${order.antal} – ${order.chef}, ${order.adress}`;
+            orderList.appendChild(item);
+          });
 
-  // 🗣️ Lägg till talsyntesen här
-  const tts = `Jag hittade ${filtrerade.length} beställningar från ${namn}.`;
-  const utterance = new SpeechSynthesisUtterance(tts);
-  utterance.lang = "sv-SE"; // Svenska röst
-  speechSynthesis.speak(utterance);
-}
+          const tts = `Jag hittade ${filtrerade.length} beställningar från ${namn}.`;
+          const utterance = new SpeechSynthesisUtterance(tts);
+          utterance.lang = "sv-SE";
+          speechSynthesis.speak(utterance);
+
+        } else {
+          responseBox.innerText = `😕 Hittade inga beställningar från ${namn}.`;
+        }
+      } else {
+        responseBox.innerText = "❓ Jag förstod inte kommandot. Försök skriva: 'Visa alla beställningar från [namn]'.";
       }
+    }
   </script>
 
 </body>
