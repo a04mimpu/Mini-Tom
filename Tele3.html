@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8" />
+  <title>Tele3 - Leverantörsportal</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: sans-serif;
+      background: #f9fdf9;
+    }
+
+    .header {
+      background-color: #1e6f3d;
+      color: white;
+      padding: 20px;
+      text-align: center;
+      font-size: 24px;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 40px auto;
+      background: white;
+      border: 1px solid #b7e1b7;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+
+    h2 {
+      color: #1e6f3d;
+    }
+
+    .order-line {
+      margin: 15px 0;
+      padding: 10px;
+      background: #e9ffe9;
+      border-left: 4px solid #1e6f3d;
+    }
+
+    .label {
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header">📦 Tele3 – Leverantörsportal</div>
+
+  <div class="container" id="orderInfo">
+    <p>🔄 Hämtar orderinformation...</p>
+  </div>
+
+  <script>
+    const order = JSON.parse(localStorage.getItem("tele3Order"));
+
+    if (order) {
+      document.getElementById("orderInfo").innerHTML = `
+        <h2>Order #${order.orderId || "okänd"}</h2>
+        
+        <div class="order-line">
+          <span class="label">📋 Produkter:</span><br>
+          ${order.produkter.map(p => `✅ ${p}`).join("<br>")}
+        </div>
+
+        <div class="order-line">
+          <span class="label">🏠 Leveransadress:</span><br>
+          ${order.adress}
+        </div>
+
+        <div class="order-line">
+          <span class="label">👤 Mottagare:</span><br>
+          ${order.chef}
+        </div>
+
+        <div class="order-line">
+          <span class="label">🕒 Orderdatum:</span><br>
+          ${order.datum}
+        </div>
+      `;
+    } else {
+      document.getElementById("orderInfo").innerHTML = `
+        <p>⚠️ Ingen beställning hittades i systemet.</p>
+      `;
+    }
+  </script>
+
+</body>
+</html>
