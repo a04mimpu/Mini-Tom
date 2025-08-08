@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="sv">
 <head>
@@ -10,7 +11,6 @@
       background: #f9fdf9;
     }
 
-    /* Toppmeny */
     .topnav {
       background-color: #1e6f3d;
       overflow: hidden;
@@ -29,12 +29,10 @@
       border-right: none;
     }
 
-    /* Layout */
     .main {
       display: flex;
     }
 
-    /* Sidomeny */
     .menu {
       background: #1e6f3d;
       color: white;
@@ -58,7 +56,6 @@
       cursor: pointer;
     }
 
-    /* Innehåll */
     .content {
       flex: 1;
       padding: 40px;
@@ -86,6 +83,7 @@
       padding: 10px 20px;
       font-size: 16px;
       margin-top: 10px;
+      margin-right: 10px;
     }
 
     #voiceStatus {
@@ -94,7 +92,6 @@
       color: #555;
     }
 
-    /* Faktura-popup */
     #fakturaModal {
       display: none;
       position: fixed;
@@ -152,22 +149,22 @@
         <div id="chef">-</div>
       </div>
 
-      <div>
-
-<div class="voice-box">
-      <p><strong>Säg:</strong> "Visa mig fakturan" eller "Skicka mejl"</p>
-      <button class="btn" onclick="startListening()">🎤 Prata med Tom</button>
+      <div class="voice-box">
+        <p><strong>Säg:</strong> "Visa mig fakturan" eller "Skicka mejl"</p>
+        <button onclick="startListening()">🎤 Prata med Tom</button>
+        <button onclick="öppnaOutlookMejl()">📧 Skicka mejl manuellt</button>
+        <button onclick="visaFaktura()">📄 Visa faktura manuellt</button>
+        <p id="voiceStatus"></p>
+      </div>
     </div>
   </div>
 
   <!-- Fakturaruta -->
-  <div id="invoiceModal" class="invoice-modal">
+  <div id="fakturaModal">
     <h2>Faktura</h2>
     <p>Fakturan gäller beställning #3471</p>
     <p>Summa: 4 289 kr</p>
     <p>Förfallodatum: 2025-09-01</p>
-    <button onclick="document.getElementById('invoiceModal').style.display='none'" class="btn">Stäng</button
-
     <button onclick="stängFaktura()">Stäng</button>
   </div>
 
@@ -185,6 +182,7 @@
       `Jag har lagt ${produkter.join(", ")} i korgen. Leveransen går till ${adress}, till ${chef}.`
     );
     tts.lang = "sv-SE";
+    speechSynthesis.cancel();
     speechSynthesis.speak(tts);
 
     // 🎤 Röstigenkänning
@@ -193,15 +191,23 @@
     recognition.lang = "sv-SE";
     recognition.continuous = false;
 
+    function startListening() {
+      speechSynthesis.cancel(); // Stoppa eventuell pågående talsyntes
+      recognition.start();
+    }
+
     recognition.onresult = (event) => {
       const transcript = event.results[0][0].transcript.toLowerCase();
       document.getElementById("voiceStatus").innerText = `📢 Du sa: "${transcript}"`;
 
       if (transcript.includes("skicka mejl")) {
+        speechSynthesis.cancel();
         const tts2 = new SpeechSynthesisUtterance(`Jag skickar mejlet nu till ${chef}`);
         tts2.lang = "sv-SE";
+        tts2.onend = () => {
+          öppnaOutlookMejl();
+        };
         speechSynthesis.speak(tts2);
-        setTimeout(öppnaOutlookMejl, 2000);
       }
 
       if (transcript.includes("visa fakturan")) {
@@ -212,8 +218,6 @@
     recognition.onerror = () => {
       document.getElementById("voiceStatus").innerText = "⚠️ Något gick fel med röstigenkänningen.";
     };
-
-    recognition.start();
 
     function öppnaOutlookMejl() {
       const email = chef
@@ -238,10 +242,5 @@
       document.getElementById("fakturaModal").style.display = "none";
     }
   </script>
-
-
 </body>
 </html>
-
-    
-
