@@ -199,8 +199,8 @@
       window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
 
       // 📨 Lägg till i Tele3
-      const tele3Beställningar = JSON.parse(localStorage.getItem("tele3Beställningar")) || [];
-      tele3Beställningar.push({
+      const tele3beställningar = JSON.parse(localStorage.getItem("tele3beställningar")) || [];
+      tele3beställningar.push({
         produkter,
         chef,
         adress,
