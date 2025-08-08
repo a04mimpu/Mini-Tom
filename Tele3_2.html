@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8">
+  <title>Tele3 Portal</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      background: #f4f4f4;
+      margin: 0;
+      padding: 40px;
+    }
+
+    h1 {
+      color: #006400;
+    }
+
+    .order-box {
+      background: white;
+      padding: 20px;
+      border: 2px solid #ccc;
+      border-radius: 10px;
+      margin-top: 20px;
+    }
+
+    button {
+      background-color: #8b0000;
+      color: white;
+      border: none;
+      padding: 10px 16px;
+      font-size: 14px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #a80000;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>📦 Tele3 Orderportal</h1>
+
+  <button onclick="nollställOrder()">🗑️ Rensa beställning</button>
+
+  <div id="orderBox" class="order-box">
+    <p>Laddar beställning...</p>
+  </div>
+
+  <script>
+    const orderBox = document.getElementById("orderBox");
+
+    // Hämtar senaste beställningen (sista i listan)
+    const allaBeställningar = JSON.parse(localStorage.getItem("tele3beställningar")) || [];
+    const order = allaBeställningar.at(-1);  // senaste
+
+    if (order && order.produkter && order.produkter.length > 0) {
+      orderBox.innerHTML = `
+        <h2>Ny beställning mottagen ✅</h2>
+        <p><strong>Mottagare:</strong> ${order.chef}</p>
+        <p><strong>Adress:</strong> ${order.adress}</p>
+        <p><strong>Produkter:</strong></p>
+        <ul>
+          ${order.produkter.map(p => `<li>${p}</li>`).join("")}
+        </ul>
+        <p><em>Mottaget: ${order.tid}</em></p>
+      `;
+    } else {
+      orderBox.innerHTML = `<p>❌ Ingen beställning har skickats ännu.</p>`;
+    }
+
+    function nollställOrder() {
+      localStorage.removeItem("tele3beställningar");
+      location.reload();
+    }
+  </script>
+
+</body>
+</html>
