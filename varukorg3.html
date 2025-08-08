@@ -183,9 +183,9 @@ Tom – AI-assistent`
       );
       window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
 
-      const tele3Beställningar = JSON.parse(localStorage.getItem("tele3Beställningar")) || [];
-      tele3Beställningar.push({ produkter, chef, adress, tid: new Date().toLocaleString() });
-      localStorage.setItem("tele3Beställningar", JSON.stringify(tele3Beställningar));
+      const tele3Beställningar = JSON.parse(localStorage.getItem("tele3beställningar")) || [];
+      tele3beställningar.push({ produkter, chef, adress, tid: new Date().toLocaleString() });
+      localStorage.setItem("tele3beställningar", JSON.stringify(tele3beställningar));
     }
 
     function startVoice() {
