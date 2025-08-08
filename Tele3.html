@@ -50,7 +50,10 @@
 
   <script>
     const orderBox = document.getElementById("orderBox");
-    const order = JSON.parse(localStorage.getItem("telebeställningar"));
+
+    // Hämtar senaste beställningen (sista i listan)
+    const allaBeställningar = JSON.parse(localStorage.getItem("tele3beställningar")) || [];
+    const order = allaBeställningar.at(-1);  // senaste
 
     if (order && order.produkter && order.produkter.length > 0) {
       orderBox.innerHTML = `
@@ -61,7 +64,7 @@
         <ul>
           ${order.produkter.map(p => `<li>${p}</li>`).join("")}
         </ul>
-        <p><em>Mottaget: ${new Date().toLocaleString("sv-SE")}</em></p>
+        <p><em>Mottaget: ${order.tid}</em></p>
       `;
     } else {
       orderBox.innerHTML = `<p>❌ Ingen beställning har skickats ännu.</p>`;
