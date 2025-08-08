@@ -65,6 +65,11 @@ ul#orderList li {background: #fff;
 
 //Läs sparade bestälningar
         const savedOrders = JSON.parse(localStorage.getItem("orders")) || [];
+        const filtrerade = savedOrders.filter(order =>
+          order.chef && order.chef.toLowerCases().includes(namn)
+      );
+        if (filtrerade.length) > 0) {
+          
 
 
 
