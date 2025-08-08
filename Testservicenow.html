@@ -136,6 +136,15 @@ speechSynthesis.speak(tts);
     localStorage.setItem("produkter", JSON.stringify([produkt, ...tillbehör]));
     localStorage.setItem("mottagareNamn", chef);
     localStorage.setItem("mottagareAdress", adress);
+    const order = {
+  produkt: produkt,
+  antal: 1, // du kan uppdatera detta om du har ett faktiskt antal någonstans
+  chef: chef,
+  adress: adress
+};
+    let savedOrders = JSON.parse(localStorage.getItem("orders")) || [];
+savedOrders.push(order);
+localStorage.setItem("orders", JSON.stringify(savedOrders));
 
     // Gå till nästa sida när talsyntesen är klar
     svar.onend = () => {
