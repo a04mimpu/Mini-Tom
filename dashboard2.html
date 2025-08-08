@@ -88,14 +88,14 @@
             orderList.appendChild(item);
           });
 
-         let tts = "";
+  let tts = "";
 
 if (filtrerade.length === 1) {
   tts = `Jag hittade en beställning från ${namn}.`;
-} else if (filtrerade.length >= 1 && filtrerade.length <= 4) {
-  tts = `Jag hittade några beställningar från ${namn}.`;
-} else if (filtrerade.length >= 2) {
-  tts = `Oj! Jag hittade många beställningar från ${namn}!`;
+} else if (filtrerade.length === 2) {
+  tts = `Oj! Jag hittade två beställningar från ${namn}!`;
+} else if (filtrerade.length >= 3) {
+  tts = `Wow! Jag hittade många beställningar från ${namn}!`;
 }
 
 if (tts) {
