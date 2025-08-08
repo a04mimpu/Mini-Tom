@@ -69,6 +69,10 @@ ul#orderList li {background: #fff;
           order.chef && order.chef.toLowerCases().includes(namn)
       );
         if (filtrerade.length) > 0) {
+          responseBox.innerText = `📦 Visar ${filtrerade.length} beställning(ar) från ${namn}:`;
+          filtrerade.forEach(order => {
+            const item = document.createElement("li");
+            item.innerText =  `🛒 ${order.produkt} x${order.antal} – ${order.chef}, ${order.adress}`;
           
 
 
