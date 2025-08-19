@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="UTF-8" />
+<title>Timpool – Fritext → Autofyll (Mån–Fre)</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<style>
+  :root{--bg:#f7f7f9;--card:#fff;--txt:#111827;--muted:#6b7280;--pri:#3b82f6;--ok:#16a34a;--err:#dc2626;--br:12px;--shadow:0 8px 24px rgba(0,0,0,.08)}
+  *{box-sizing:border-box}
+  body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--txt);margin:0;padding:24px}
+  h1{font-size:22px;margin:0 0 12px}
+  .card{background:var(--card);border-radius:var(--br);box-shadow:var(--shadow);padding:18px;max-width:980px;margin:auto}
+  .row{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end}
+  label{font-size:13px;color:var(--muted);display:block;margin-bottom:6px}
+  input,select,textarea,button{font-size:14px}
+  input[type="text"],input[type="date"],input[type="time"],input[type="number"],select,textarea{
+    padding:10px 12px;border:1px solid #e5e7eb;border-radius:10px;background:#fff;min-width:220px
+  }
+  textarea{min-width:480px;min-height:64px;resize:vertical}
+  .btn{appearance:none;border:0;background:var(--pri);color:#fff;padding:12px 14px;border-radius:10px;cursor:pointer;font-weight:600}
+  .btn.ghost{background:transparent;color:var(--pri);border:1px solid var(--pri)}
+  .btn:disabled{background:#9aa7bd;cursor:not-allowed}
+  .small{font-size:12px;color:var(--muted)}
+  hr{border:0;border-top:1px solid #eee;margin:14px 0}
+  table{width:100%;border-collapse:collapse;font-size:14px}
+  th,td{padding:10px 8px;border-bottom:1px solid #eee;text-align:left;vertical-align:top}
+  td.timecell{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .toast{margin-top:10px}
+  .ok{color:var(--ok)} .err{color:var(--err)}
+  .pill{display:inline-flex;gap:6px;align-items:center;font-size:12px;padding:4px 10px;border-radius:999px;background:#eef2ff;color:#3730a3}
+  .muted{color:var(--muted)}
+</style>
+</head>
+<body>
+  <div class="card">
+    <h1>Fritextkommando → Autofyll schema (mån–fre)</h1>
+
+    <div class="row">
+      <div style="flex:1 1 520px">
+        <label>Skriv ett kommando (svenska)</label>
+        <textarea id="cmd" placeholder='Ex: "Lägg Anna på alla vardagar 08–16 nästa vecka (rast 30 min)"'></textarea>
+        <div class="small">Stöder uttryck som: <em>Anna</em>, <em>vardagar / mån–fre</em>, <em>08–16 / 8-16</em>, <em>nästa vecka / denna vecka</em>, <em>rast 30 min</em>.</div>
+      </div>
+      <div>
+        <label>Period (om du inte skriver "nästa vecka" i kommandot)</label>
+        <div>
+          <input id="startDate" type="date"> –
+          <input id="endDate" type="date">
+        </div>
+        <div class="small">Används som fallback om kommandot inte anger vecka.</div>
+      </div>
+      <div>
+        <button class="btn" id="btnParse">Tolka & fyll</button>
+      </div>
+    </div>
+
+    <hr/>
+
+    <div class="row">
+      <span class="pill" id="pickedPill">Ingen vikarie vald</span>
+      <span class="small" id="sumInfo"></span>
+    </div>
+
+    <table id="grid">
+      <thead>
+        <tr>
+          <th>Datum</th>
+          <th>Dag</th>
+          <th>Tider</th>
+          <th>Kommentar</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+      <tfoot>
+        <tr><td colspan="4" class="small muted" id="footNote">Skriv ett kommando ovan och klicka “Tolka & fyll”.</td></tr>
+      </tfoot>
+    </table>
+
+    <div style="margin-top:12px;display:flex;gap:8px">
+      <button class="btn" id="btnSave" disabled>Spara</button>
+      <button class="btn ghost" id="btnClear">Rensa</button>
+    </div>
+
+    <div class="toast" id="toast"></div>
+  </div>
+
+<script>
+/* ---------------- Mockdata ---------------- */
+const VIKARIER = [
+  { id:'v100', namn:'Anna Nilsson', kompetenser:['LSS'], maxTimPerVecka: 40, tillgänglighet:{'mån-fre':[ {start:'08:00',slut:'16:00',rastMin:30} ]}},
+  { id:'v101', namn:'Anna Karlsson', kompetenser:['LSS','HSL'], maxTimPerVecka: 38, tillgänglighet:{'mån-fre':[ {start:'08:00',slut:'16:00',rastMin:30} ]}},
+  { id:'v200', namn:'Bea Berg',     kompetenser:['LSS'], maxTimPerVecka: 30, tillgänglighet:{'mån-fre':[ {start:'07:00',slut:'16:00',rastMin:30} ]}},
+];
+let EXISTING_BOOKINGS = [
+  { vikarieId:'v100', date:'2025-09-03', start:'09:00', slut:'12:00' } // krockexempel
+];
+const HOLIDAYS = ['2025-12-25','2025-12-26'];
+
+/* ---------------- Utils ---------------- */
+const el=id=>document.getElementById(id);
+const pad=n=>n.toString().padStart(2,'0');
+function iso(d){ return d.toISOString().slice(0,10); }
+function parseISO(s){ const [y,m,d]=s.split('-').map(Number); return new Date(y,m-1,d); }
+function wdName(d){ return ['Sön','Mån','Tis','Ons','Tor','Fre','Lör'][d.getDay()]; }
+function toMinutes(t){ const [h,m]=t.split(':').map(Number); return h*60+m; }
+function minutesBetween(s,e){ return toMinutes(e)-toMinutes(s); }
+function weekdaysBetween(startISO,endISO){
+  const days=[]; let d=parseISO(startISO); const end=parseISO(endISO);
+  for(; d<=end; d.setDate(d.getDate()+1)){ const k=d.getDay(); if(k>=1 && k<=5) days.push(new Date(d)); }
+  return days;
+}
+function nextWeekBounds(){
+  const now = new Date(); const dow = now.getDay(); // 0=sön
+  const mon = new Date(now); mon.setDate(now.getDate() + ((8 - dow) % 7 || 7)); // nästa måndag
+  const fri = new Date(mon); fri.setDate(mon.getDate()+4);
+  return {start: iso(mon), end: iso(fri)};
+}
+function thisWeekBounds(){
+  const now = new Date(); const dow = now.getDay();
+  const mon = new Date(now); mon.setDate(now.getDate() - ((dow+6)%7)); // denna veckas måndag
+  const fri = new Date(mon); fri.setDate(mon.getDate()+4);
+  return {start: iso(mon), end: iso(fri)};
+}
+function showToast(msg, ok=false){ const t=el('toast'); t.className='toast '+(ok?'ok':'err'); t.textContent=msg; setTimeout(()=>{t.textContent='';t.className='toast'},3800); }
+
+/* ---------------- State ---------------- */
+let PICKED = null;
+let GRID_ROWS = [];
+let PERIOD = {start:null, end:null};
+
+/* ---------------- Mini-NLU: tolkning av fritext ----------------
+   Den här “AI-lätta” tolken plockar ut:
+   - namn (matchar mot kända vikarier)
+   - dagspann (vardagar/mån–fre)
+   - tid (08–16, 8-16, 08:00-16:00)
+   - vecka (nästa vecka / denna vecka), annars fallback till datumfälten
+   - rast (rast 30 min)
+------------------------------------------------------------------*/
+function parseCommand(cmdRaw){
+  let cmd = (cmdRaw||'').toLowerCase().trim();
+
+  // 1) namn → match mot VIKARIER
+  let picked = null;
+  for(const v of VIKARIER){
+    if(cmd.includes(v.namn.toLowerCase()) || cmd.includes(v.namn.split(' ')[0].toLowerCase())){
+      picked = v; break;
+    }
+  }
+  // Vanligaste kortnamnet “anna”
+  if(!picked && cmd.includes('anna')){
+    picked = VIKARIER.find(v=>v.namn.toLowerCase().startsWith('anna')) || null;
+  }
+
+  // 2) dagspann (vi fokuserar på vardagar/mån–fre)
+  const weekdays = /(vardag|vardagar|mån\s*[-–]?\s*fre|måndag.*fredag)/.test(cmd);
+
+  // 3) tidsspann, stöd för “8-16”, “8–16”, “08:00-16:00”, “08–16”
+  const timeMatch = cmd.match(/(\d{1,2}[:.]?\d{0,2})\s*[-–]\s*(\d{1,2}[:.]?\d{0,2})/);
+  function norm(t){
+    if(!t) return null;
+    const parts = t.replace('.',':').split(':').map(x=>x.trim());
+    let h = parts[0].padStart(2,'0');
+    let m = (parts[1]||'00').padStart(2,'0');
+    return `${h}:${m}`;
+  }
+  const start = timeMatch ? norm(timeMatch[1]) : null;
+  const end   = timeMatch ? norm(timeMatch[2]) : null;
+
+  // 4) rast
+  let rast = 30; // default
+  const rastMatch = cmd.match(/rast\s*(\d{1,3})\s*(min|minute|minuter)?/);
+  if(rastMatch){ rast = Number(rastMatch[1]); }
+
+  // 5) vecka
+  let period = null;
+  if(/nästa vecka/.test(cmd)) period = nextWeekBounds();
+  else if(/denna vecka|den här veckan|denna v/.test(cmd)) period = thisWeekBounds();
+
+  return {picked, weekdays, start, end, rast, period};
+}
+
+/* ---------------- UI: grid & validering ---------------- */
+function buildGrid(){
+  const tb = el('grid').querySelector('tbody'); tb.innerHTML=''; GRID_ROWS=[];
+  const days = weekdaysBetween(PERIOD.start, PERIOD.end);
+  for(const d of days){
+    const dateISO=iso(d), dayName=wdName(d);
+    GRID_ROWS.push({date:dateISO, day:dayName, start:'', end:'', rast:0, note:null});
+  }
+  renderGrid(); updateSum();
+}
+function renderGrid(){
+  const tb = el('grid').querySelector('tbody'); tb.innerHTML='';
+  for(const row of GRID_ROWS){
+    const tr=document.createElement('tr');
+    tr.innerHTML = `
+      <td>${row.date}</td>
+      <td>${row.day}</td>
+      <td class="timecell">
+        <input type="time" value="${row.start}" data-date="${row.date}" data-k="start" style="min-width:120px">
+        <span>–</span>
+        <input type="time" value="${row.end}" data-date="${row.date}" data-k="end" style="min-width:120px">
+        <span>Rast</span>
+        <input type="number" value="${row.rast}" data-date="${row.date}" data-k="rast" min="0" style="width:80px">
+      </td>
+      <td class="small ${row.note?.type==='err'?'err':''}">${row.note?.msg||''}</td>
+    `;
+    tb.appendChild(tr);
+  }
+  // inputs
+  tb.querySelectorAll('input').forEach(inp=>{
+    inp.addEventListener('input',(e)=>{
+      const {date,k} = e.target.dataset;
+      const r = GRID_ROWS.find(x=>x.date===date);
+      r[k] = k==='rast' ? Number(e.target.value||0) : e.target.value;
+      validateRow(r);
+      renderGrid(); updateSum();
+    });
+  });
+}
+function validateRow(row){
+  if(HOLIDAYS.includes(row.date)){ row.note={type:'err',msg:'Röd dag'}; return; }
+  if(row.start && row.end && toMinutes(row.end)<=toMinutes(row.start)){ row.note={type:'err',msg:'Slut ≤ start'}; return; }
+  if(PICKED){
+    const overlaps = EXISTING_BOOKINGS.some(b => b.vikarieId===PICKED.id && b.date===row.date && !(row.end<=b.start || row.start>=b.slut));
+    if(overlaps){ row.note={type:'err',msg:'Krock med befintlig bokning'}; return; }
+  }
+  row.note=null;
+}
+function updateSum(){
+  let total=0;
+  for(const r of GRID_ROWS){
+    if(r.start && r.end && !r.note){ total += minutesBetween(r.start,r.end) - (r.rast||0); }
+  }
+  el('sumInfo').textContent = total ? `Summa: ${(total/60).toFixed(1)} h` : '';
+  el('btnSave').disabled = !PICKED || total===0 || GRID_ROWS.every(r=>!r.start||!r.end||r.note);
+}
+
+/* ---------------- Actions ---------------- */
+function applyCommand(){
+  const parsed = parseCommand(el('cmd').value);
+  // 1) vikarie
+  if(!parsed.picked){ showToast('Hittade ingen vikarie i kommandot (skriv t.ex. "Anna").'); return; }
+  PICKED = parsed.picked;
+  el('pickedPill').textContent = `Vikarie: ${PICKED.namn}`;
+
+  // 2) period
+  if(parsed.period){
+    PERIOD = {start: parsed.period.start, end: parsed.period.end};
+    el('startDate').value = PERIOD.start; el('endDate').value = PERIOD.end;
+  }else{
+    // fallback: använd valda datumfält
+    const s = el('startDate').value, e = el('endDate').value;
+    if(!s || !e){ const nx = nextWeekBounds(); PERIOD = nx; el('startDate').value=nx.start; el('endDate').value=nx.end; }
+    else PERIOD = {start:s, end:e};
+  }
+  buildGrid();
+
+  // 3) om dagspann = vardagar (vår grid är redan mån–fre)
+  if(!parsed.weekdays){
+    // om de inte skrivit vardagar men vi har en grid med mån–fre ändå – fortsätt
+  }
+
+  // 4) tidsspann
+  const start = parsed.start || '08:00';
+  const end   = parsed.end   || '16:00';
+  const rast  = Number.isFinite(parsed.rast) ? parsed.rast : 30;
+
+  for(const row of GRID_ROWS){
+    row.start = start; row.end = end; row.rast = rast;
+    validateRow(row);
+  }
+  renderGrid(); updateSum();
+  showToast(`Fyllde ${PICKED.namn} ${PERIOD.start}–${PERIOD.end} (mån–fre) ${start}–${end}, rast ${rast} min.`, true);
+}
+
+async function saveAll(){
+  const okRows = GRID_ROWS.filter(r=>r.start && r.end && !r.note);
+  if(!okRows.length){ showToast('Inget att spara.'); return; }
+  // enkel race-koll
+  for(const r of okRows){
+    const overlapping = EXISTING_BOOKINGS.some(b => b.vikarieId===PICKED.id && b.date===r.date && !(r.end<=b.start || r.start>=b.slut));
+    if(overlapping){ showToast('Överlapp hittades vid spara. Uppdatera och försök igen.'); return; }
+  }
+  EXISTING_BOOKINGS = EXISTING_BOOKINGS.concat(okRows.map(r=>({vikarieId:PICKED.id,date:r.date,start:r.start,slut:r.end})));
+  showToast(`Sparade ${okRows.length} pass för ${PICKED.namn}.`, true);
+}
+
+/* ---------------- Events & start ---------------- */
+el('btnParse').addEventListener('click', applyCommand);
+el('btnClear').addEventListener('click', ()=>{
+  GRID_ROWS.forEach(r=>{ r.start=''; r.end=''; r.rast=0; r.note=null; });
+  renderGrid(); updateSum(); showToast('Rensat.');
+});
+el('btnSave').addEventListener('click', saveAll);
+el('startDate').addEventListener('change', e=>{ PERIOD.start=e.target.value; buildGrid(); });
+el('endDate').addEventListener('change', e=>{ PERIOD.end=e.target.value; buildGrid(); });
+
+// Default: sätt datum till nästa vecka
+(function init(){
+  const nx = nextWeekBounds(); PERIOD = nx;
+  el('startDate').value = nx.start; el('endDate').value = nx.end;
+  buildGrid();
+})();
+</script>
+</body>
+</html>
