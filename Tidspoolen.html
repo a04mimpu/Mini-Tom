@@ -36,4 +36,24 @@
       { namn: "Anna", dagar: ["Måndag","Tisdag","Onsdag"], tider:["08-12","12-16"] },
       { namn: "Johan", dagar: ["Tisdag","Onsdag","Torsdag","Fredag"], tider:["08-12"] },
       { namn: "Maria", dagar: ["Måndag","Fredag"], tider:["12-16"] },
-      { namn: "Oskar", dagar: ["Torsdag"], tider:["12-16"]()
+      { namn: "Oskar", dagar: ["Torsdag"], tider:["12-16"] }
+    ];
+
+    function fillSchedule() {
+      const rows = document.querySelectorAll("#schedule tr");
+      for (let i = 1; i < rows.length; i++) {
+        const dag = rows[i].cells[0].innerText;
+        for (let j = 1; j < rows[i].cells.length; j++) {
+          const slot = j === 1 ? "08-12" : "12-16";
+          const ledig = vikarier.find(v => v.dagar.includes(dag) && v.tider.includes(slot));
+          if (ledig) {
+            rows[i].cells[j].innerText = ledig.namn;
+          } else {
+            rows[i].cells[j].innerText = "Ingen ledig";
+          }
+        }
+      }
+    }
+  </script>
+</body>
+</html>
