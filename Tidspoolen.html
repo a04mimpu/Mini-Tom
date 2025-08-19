@@ -1,59 +1,480 @@
-
 <!DOCTYPE html>
 <html lang="sv">
 <head>
-  <meta charset="UTF-8">
-  <title>AI Timpoolen Demo</title>
+  <meta charset="UTF-8" />
+  <title>Timpool – Auto-lägg schema (förhandsmodell)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
-    body { font-family: Arial, sans-serif; background:#f5f5f5; padding:20px; }
-    h1 { text-align:center; }
-    table { border-collapse: collapse; margin:20px auto; }
-    th, td { border:1px solid #ccc; padding:10px; text-align:center; min-width:120px; }
-    th { background:#eee; }
-    button { margin:20px auto; display:block; padding:10px 20px; font-size:16px; }
+    :root{
+      --bg:#f7f7f9; --card:#fff; --txt:#1f2937; --muted:#6b7280; --ok:#16a34a; --warn:#b45309; --err:#dc2626; --pri:#3b82f6;
+      --br:12px; --shadow:0 6px 20px rgba(0,0,0,.08);
+    }
+    *{box-sizing:border-box}
+    body{font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; background:var(--bg); color:var(--txt); margin:0; padding:24px}
+    h1{font-size:22px; margin:0 0 16px}
+    .card{background:var(--card); border-radius:var(--br); box-shadow:var(--shadow); padding:20px; max-width:980px; margin:auto}
+    .row{display:flex; gap:12px; flex-wrap:wrap; align-items:flex-end}
+    label{font-size:13px; color:var(--muted); display:block; margin-bottom:6px}
+    input, select{padding:10px 12px; border:1px solid #e5e7eb; border-radius:10px; background:#fff; min-width:220px}
+    .btn{appearance:none; border:0; background:var(--pri); color:#fff; padding:12px 16px; border-radius:10px; cursor:pointer; transition:.2s; font-weight:600}
+    .btn:disabled{background:#9aa7bd; cursor:not-allowed}
+    .btn.secondary{background:#111827}
+    .btn.ghost{background:transparent; color:var(--pri); border:1px solid var(--pri)}
+    .inline{display:flex; gap:8px; align-items:center}
+    .toast{margin-top:12px; font-size:14px}
+    .toast.ok{color:var(--ok)}
+    .toast.err{color:var(--err)}
+    .small{font-size:12px; color:var(--muted)}
+    hr{border:0; border-top:1px solid #eee; margin:16px 0}
+
+    /* Modal */
+    .modal-backdrop{position:fixed; inset:0; background:rgba(0,0,0,.35); display:none; align-items:center; justify-content:center; padding:20px}
+    .modal{background:#fff; border-radius:16px; width:min(980px, 96vw); max-height:90vh; overflow:auto; box-shadow:var(--shadow); padding:20px}
+    .modal header{display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:12px}
+    .modal h2{font-size:18px; margin:0}
+    .chip{display:inline-flex; align-items:center; gap:6px; font-size:12px; padding:4px 8px; border-radius:999px; border:1px solid #e5e7eb; color:#374151; background:#fafafa}
+    .chip.ok{border-color:#86efac; background:#f0fdf4; color:#065f46}
+    .chip.warn{border-color:#facc15; background:#fefce8; color:#713f12}
+    .chip.err{border-color:#fecaca; background:#fef2f2; color:#7f1d1d}
+    table{width:100%; border-collapse:collapse; font-size:14px}
+    th, td{padding:10px 8px; border-bottom:1px solid #eee; text-align:left; vertical-align:top}
+    tbody tr:hover{background:#fafafa}
+    .right{text-align:right}
+    .bad{color:var(--err)}
+    .good{color:var(--ok)}
+    .muted{color:var(--muted)}
+    .footer{display:flex; justify-content:flex-end; gap:8px; margin-top:12px}
+    .tag{font-size:12px; padding:2px 8px; border-radius:999px; background:#eef2ff; color:#3730a3}
+    code.inline{background:#f3f4f6; padding:2px 6px; border-radius:6px}
   </style>
 </head>
 <body>
-  <h1>AI Timpoolen – Demo</h1>
-  <button onclick="fillSchedule()">Fyll schemat med vikarier</button>
+  <div class="card">
+    <h1>Auto-lägg schema på vald vikarie</h1>
+    <div class="row">
+      <div>
+        <label>Välj vikarie</label>
+        <select id="vikarieSelect"></select>
+        <div class="small" id="vikInfo"></div>
+      </div>
+      <div>
+        <label>Period (inklusive)</label>
+        <div class="inline">
+          <input type="date" id="startDate">
+          <span>–</span>
+          <input type="date" id="endDate">
+        </div>
+        <div class="small">Endast vardagar (mån–fre) schemaläggs automatiskt.</div>
+      </div>
+      <div>
+        <label>Standardpass</label>
+        <div class="inline">
+          <input id="stdStart" type="time" value="08:00">
+          <span>–</span>
+          <input id="stdEnd" type="time" value="17:00">
+          <span>Rast (min)</span>
+          <input id="stdRast" type="number" value="30" min="0" style="width:90px">
+        </div>
+      </div>
+      <div>
+        <button class="btn" id="btnPreview">Förhandsgranska & lägg schema</button>
+      </div>
+    </div>
+    <hr/>
+    <div class="small">
+      Tips: Ändra tiderna eller vikarie och klicka “Förhandsgranska”. Konflikter (t.ex. överlapp, maxtid/vecka, röd dag) visas innan du sparar.
+    </div>
+    <div class="toast" id="toast"></div>
+  </div>
 
-  <table id="schedule">
-    <tr>
-      <th>Dag</th>
-      <th>08–12</th>
-      <th>12–16</th>
-    </tr>
-    <tr><td>Måndag</td><td></td><td></td></tr>
-    <tr><td>Tisdag</td><td></td><td></td></tr>
-    <tr><td>Onsdag</td><td></td><td></td></tr>
-    <tr><td>Torsdag</td><td></td><td></td></tr>
-    <tr><td>Fredag</td><td></td><td></td></tr>
-  </table>
+  <!-- Modal -->
+  <div class="modal-backdrop" id="modalBackdrop" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <header>
+        <h2 id="modalTitle">Förslag för <span id="mVikNamn"></span> <span class="tag" id="mVikTag"></span></h2>
+        <button class="btn ghost" id="btnClose">Stäng</button>
+      </header>
+      <div id="summaryRow" style="margin-bottom:10px;"></div>
+      <table id="previewTable">
+        <thead>
+          <tr>
+            <th>Datum</th>
+            <th>Dag</th>
+            <th>Start</th>
+            <th>Slut</th>
+            <th>Rast</th>
+            <th>Status</th>
+            <th>Detalj</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+        <tfoot>
+          <tr>
+            <td colspan="7" class="right">
+              <span id="totalLabel" class="muted"></span>
+            </td>
+          </tr>
+        </tfoot>
+      </table>
+      <div class="footer">
+        <button class="btn secondary" id="btnSave">Spara godkända</button>
+      </div>
+    </div>
+  </div>
 
   <script>
-    // Enkel "databas" med vikarier
-    const vikarier = [
-      { namn: "Anna", dagar: ["Måndag","Tisdag","Onsdag"], tider:["08-12","12-16"] },
-      { namn: "Johan", dagar: ["Tisdag","Onsdag","Torsdag","Fredag"], tider:["08-12"] },
-      { namn: "Maria", dagar: ["Måndag","Fredag"], tider:["12-16"] },
-      { namn: "Oskar", dagar: ["Torsdag"], tider:["12-16"] }
+    /* --------- Mockdata --------- */
+    const VIKARIER = [
+      {
+        id: 'v001',
+        namn: 'Alex Andersson',
+        kompetenser: ['LSS','HSL'],
+        maxTimPerVecka: 40,
+        tillgänglighet: {'mån-fre':[ {start:'08:00', slut:'17:00', rastMin:30} ]},
+      },
+      {
+        id: 'v002',
+        namn: 'Bea Berg',
+        kompetenser: ['LSS'],
+        maxTimPerVecka: 30,
+        tillgänglighet: {'mån-fre':[ {start:'07:00', slut:'16:00', rastMin:30} ]},
+      }
     ];
 
-    function fillSchedule() {
-      const rows = document.querySelectorAll("#schedule tr");
-      for (let i = 1; i < rows.length; i++) {
-        const dag = rows[i].cells[0].innerText;
-        for (let j = 1; j < rows[i].cells.length; j++) {
-          const slot = j === 1 ? "08-12" : "12-16";
-          const ledig = vikarier.find(v => v.dagar.includes(dag) && v.tider.includes(slot));
-          if (ledig) {
-            rows[i].cells[j].innerText = ledig.namn;
-          } else {
-            rows[i].cells[j].innerText = "Ingen ledig";
+    // Befintliga bokningar (mock) – normalt från server
+    // format: { vikarieId, date:'YYYY-MM-DD', start:'HH:MM', slut:'HH:MM' }
+    let EXISTING_BOOKINGS = [
+      { vikarieId:'v001', date:'2025-09-02', start:'09:00', slut:'12:00' }, // krocktest tisdag
+      { vikarieId:'v002', date:'2025-09-04', start:'12:00', slut:'16:00' }, // krocktest torsdag
+    ];
+
+    // Röd dagar (mock). Byt mot kommunal kalender i skarp kod.
+    const HOLIDAYS = ['2025-12-25','2025-12-26'];
+
+    // Uppdrag (enkelt, kan utökas)
+    const UPPDRAG = {
+      enhetId: 'E-12',
+      kravKompetens: ['LSS'] // båda har LSS, men bara Alex har HSL
+    };
+
+    /* --------- Hjälpfunktioner --------- */
+    const el = id => document.getElementById(id);
+    const pad = n => n.toString().padStart(2,'0');
+
+    function toMinutes(t){
+      const [h,m] = t.split(':').map(Number);
+      return h*60+m;
+    }
+    function minutesBetween(s,e){ return toMinutes(e) - toMinutes(s); }
+
+    function iso(d){
+      return d.toISOString().slice(0,10);
+    }
+    function parseISO(s){
+      const [y,m,d] = s.split('-').map(Number);
+      return new Date(y, m-1, d);
+    }
+    function weekdayName(d){
+      return ['Sön','Mån','Tis','Ons','Tor','Fre','Lör'][d.getDay()];
+    }
+
+    function generateWeekdays(startISO, endISO){
+      const days = [];
+      let d = parseISO(startISO);
+      const end = parseISO(endISO);
+      for(; d<=end; d.setDate(d.getDate()+1)){
+        const wd = d.getDay();
+        if(wd>=1 && wd<=5) days.push(new Date(d));
+      }
+      return days;
+    }
+
+    function getWeekKey(dateObj){
+      // ISO-veckonummer (förenklad)
+      const d = new Date(Date.UTC(dateObj.getFullYear(), dateObj.getMonth(), dateObj.getDate()));
+      const dayNum = d.getUTCDay() || 7;
+      d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+      const yearStart = new Date(Date.UTC(d.getUTCFullYear(),0,1));
+      const weekNo = Math.ceil((((d - yearStart)/86400000) + 1)/7);
+      return `${d.getUTCFullYear()}-v${pad(weekNo)}`;
+    }
+
+    function getWeekBounds({start, end}){
+      // Returnera UNESCO-ish veckogränser som täcker intervallet (mock)
+      const days = generateWeekdays(start, end);
+      const byKey = {};
+      for(const day of days){
+        const k = getWeekKey(day);
+        if(!byKey[k]) byKey[k] = {key:k, startISO: iso(day), endISO: iso(day)};
+        // uppdatera spann
+        if(iso(day) < byKey[k].startISO) byKey[k].startISO = iso(day);
+        if(iso(day) > byKey[k].endISO) byKey[k].endISO = iso(day);
+      }
+      return Object.values(byKey);
+    }
+
+    async function isHoliday(dateISO){
+      return HOLIDAYS.includes(dateISO);
+    }
+
+    async function getBookings(vikarieId, weekStartISO, weekEndISO){
+      // mock: filtrera lokalt på datumspannet
+      const s = parseISO(weekStartISO);
+      const e = parseISO(weekEndISO);
+      return EXISTING_BOOKINGS.filter(b => {
+        return b.vikarieId===vikarieId && parseISO(b.date) >= s && parseISO(b.date) <= e;
+      });
+    }
+
+    function sumWeek(bookings){
+      // summerar endast de i "bookings" (minuter)
+      let total = 0;
+      for(const b of bookings){
+        total += minutesBetween(b.start, b.slut);
+      }
+      return total;
+    }
+
+    async function createBookings(bookingsArray){
+      // mock: "transaktion" – revalidera minimalt & skriv in lokalt
+      try{
+        // Race-skydd: kontrollera att inget exakt överlappar i just denna stund
+        for(const p of bookingsArray){
+          const overlapping = EXISTING_BOOKINGS.some(b => {
+            return b.vikarieId===p.vikarieId && b.date===p.date && !(p.slut<=b.start || p.start>=b.slut);
+          });
+          if(overlapping){
+            return {success:false, error:'Överlapp hittades vid spara (race). Försök igen.'};
           }
         }
+        EXISTING_BOOKINGS = EXISTING_BOOKINGS.concat(bookingsArray.map(p => ({
+          vikarieId: p.vikarieId, date: p.date, start: p.start, slut: p.slut
+        })));
+        return {success:true};
+      }catch(e){
+        return {success:false, error:e.message || 'Okänt fel'};
       }
     }
+
+    function hasAllSkills(vikarie, krav){
+      return krav.every(k => vikarie.kompetenser.includes(k));
+    }
+
+    /* --------- Kärnlogik --------- */
+    async function buildAutoSchedule({vikarie, period, standardPass}){
+      const conflicts = [];
+      if(!hasAllSkills(vikarie, UPPDRAG.kravKompetens)){
+        return {ok:false, proposals:[], conflicts:[{type:'kompetens', msg:'Vikarie saknar kravkompetens'}]};
+      }
+      const days = generateWeekdays(period.start, period.slut);
+
+      const weeks = getWeekBounds({start:period.start, end:period.slut});
+      const existingByWeek = {};
+      for(const w of weeks){
+        existingByWeek[w.key] = await getBookings(vikarie.id, w.startISO, w.endISO);
+      }
+
+      const proposals = [];
+      const weeklyMinutes = {}; // weekKey -> minuter inkl befintliga
+      // initiera med befintliga timmar
+      for(const w of weeks){
+        weeklyMinutes[w.key] = sumWeek(existingByWeek[w.key] || []);
+      }
+
+      for(const day of days){
+        const dateISO = iso(day);
+        if(await isHoliday(dateISO)){
+          conflicts.push({type:'holiday', date:dateISO, msg:'Röd dag (hoppar)'});
+          continue;
+        }
+
+        // välj mall (tillgänglighet) eller standard
+        const tpl = (vikarie.tillgänglighet?.['mån-fre']?.[0]) || standardPass;
+        const start = tpl.start || standardPass.start;
+        const slut  = tpl.slut  || standardPass.slut;
+        const rastMin = Number.isFinite(tpl.rastMin) ? tpl.rastMin : (Number(standardPass.rastMin)||0);
+
+        if(minutesBetween(start, slut) <= 0){
+          conflicts.push({type:'format', date:dateISO, msg:'Ogiltigt pass (start ≥ slut)'});
+          continue;
+        }
+
+        const wk = getWeekKey(day);
+        const existing = existingByWeek[wk] || [];
+        const overlap = existing.some(b => b.date===dateISO && !(slut<=b.start || start>=b.slut));
+        if(overlap){
+          conflicts.push({type:'overlap', date:dateISO, msg:'Krock med befintlig bokning'});
+          continue;
+        }
+
+        const dur = minutesBetween(start, slut) - (rastMin || 0);
+        const nextSum = (weeklyMinutes[wk] || 0) + dur;
+        if(nextSum > vikarie.maxTimPerVecka*60){
+          conflicts.push({type:'maxtid', date:dateISO, msg:`Över vecko­tak (${vikarie.maxTimPerVecka} h)`});
+          continue;
+        }
+
+        weeklyMinutes[wk] = nextSum;
+        proposals.push({ vikarieId: vikarie.id, enhetId: UPPDRAG.enhetId, date:dateISO, start, slut, rastMin });
+      }
+
+      return {ok:true, proposals, conflicts};
+    }
+
+    /* --------- UI: förhandsgranskning --------- */
+    function renderPreviewModal({vikarie, proposals, conflicts, standardPass, period}){
+      el('mVikNamn').textContent = vikarie.namn;
+      el('mVikTag').textContent = `${period.start} – ${period.slut}`;
+
+      const tbody = el('previewTable').querySelector('tbody');
+      tbody.innerHTML = '';
+
+      // Gör en snabb index på konflikter per datum
+      const conflictByDate = {};
+      for(const c of conflicts){
+        if(!c.date) continue;
+        conflictByDate[c.date] = c;
+      }
+
+      // Samla alla vardagar i period för radvis återgivning
+      const allDays = generateWeekdays(period.start, period.slut);
+      let totalMin = 0;
+
+      for(const d of allDays){
+        const dateISO = iso(d);
+        const conf = conflictByDate[dateISO];
+
+        // Finns förslag för dagen?
+        const p = proposals.find(x => x.date===dateISO);
+        const start = p?.start ?? standardPass.start;
+        const slut  = p?.slut  ?? standardPass.slut;
+        const rast  = p?.rastMin ?? standardPass.rastMin;
+
+        const tr = document.createElement('tr');
+
+        tr.innerHTML = `
+          <td>${dateISO}</td>
+          <td>${weekdayName(d)}</td>
+          <td>${start}</td>
+          <td>${slut}</td>
+          <td>${rast} min</td>
+          <td>${conf ? badge(conf.type) : badge('ok')}</td>
+          <td class="muted">${conf?.msg ?? 'OK'}</td>
+        `;
+        tbody.appendChild(tr);
+
+        if(!conf && p){
+          totalMin += minutesBetween(p.start, p.slut) - (p.rastMin||0);
+        }
+      }
+
+      el('totalLabel').textContent = `Godkända minuter: ${totalMin} min (${(totalMin/60).toFixed(1)} h) · Förslag: ${proposals.length} st · Flaggor: ${conflicts.length} st`;
+
+      // Sammanfattningschips
+      el('summaryRow').innerHTML = `
+        <span class="chip ok">OK: ${proposals.length}</span>
+        <span class="chip warn">Flaggor: ${conflicts.length}</span>
+        <span class="chip">Standardpass ${standardPass.start}–${standardPass.slut} · rast ${standardPass.rastMin} min</span>
+      `;
+
+      showModal(true);
+      // Spara-knappen aktiv bara om vi har något att spara
+      el('btnSave').disabled = proposals.length === 0;
+      // Cache för save
+      el('btnSave').dataset.payload = JSON.stringify({proposals});
+    }
+
+    function badge(type){
+      if(type==='ok') return `<span class="chip ok">✔ OK</span>`;
+      if(type==='holiday') return `<span class="chip warn">⛱ Röd dag</span>`;
+      if(type==='overlap') return `<span class="chip err">⛔ Överlapp</span>`;
+      if(type==='maxtid') return `<span class="chip warn">⚠ Veckotak</span>`;
+      if(type==='format') return `<span class="chip err">⛔ Formatfel</span>`;
+      if(type==='kompetens') return `<span class="chip err">⛔ Kompetens</span>`;
+      return `<span class="chip">ℹ</span>`;
+    }
+
+    function showToast(msg, ok=false){
+      const t = el('toast');
+      t.className = 'toast ' + (ok ? 'ok':'err');
+      t.textContent = msg;
+      setTimeout(()=>{ t.textContent=''; t.className='toast'; }, 4000);
+    }
+
+    function showModal(open){
+      const bd = el('modalBackdrop');
+      bd.style.display = open ? 'flex' : 'none';
+      bd.setAttribute('aria-hidden', open ? 'false' : 'true');
+    }
+
+    /* --------- Init & events --------- */
+    function populateVikarieSelect(){
+      const sel = el('vikarieSelect');
+      VIKARIER.forEach(v=>{
+        const o = document.createElement('option');
+        o.value = v.id; o.textContent = `${v.namn} (${v.kompetenser.join(', ')})`;
+        sel.appendChild(o);
+      });
+      sel.value = VIKARIER[0].id;
+      updateVikInfo();
+    }
+
+    function updateVikInfo(){
+      const v = VIKARIER.find(x=>x.id===el('vikarieSelect').value);
+      el('vikInfo').textContent = `Max ${v.maxTimPerVecka} h/vecka · Tillgänglighet: mån–fre ${v.tillgänglighet['mån-fre'][0].start}–${v.tillgänglighet['mån-fre'][0].slut}`;
+    }
+
+    function setDefaultDates(){
+      // Nästa arbetsvecka som default (mån–fre)
+      const now = new Date();
+      const day = now.getDay(); // 0 sön
+      const nextMon = new Date(now);
+      nextMon.setDate(now.getDate() + ((8 - day) % 7 || 7)); // kommande måndag
+      const nextFri = new Date(nextMon);
+      nextFri.setDate(nextMon.getDate()+4);
+      el('startDate').value = iso(nextMon);
+      el('endDate').value = iso(nextFri);
+    }
+
+    async function onPreview(){
+      const vikarie = VIKARIER.find(x=>x.id===el('vikarieSelect').value);
+      const period = { start: el('startDate').value, slut: el('endDate').value };
+      const standardPass = { start: el('stdStart').value, slut: el('stdEnd').value, rastMin: Number(el('stdRast').value||0) };
+
+      if(!period.start || !period.slut){
+        showToast('Välj period (start och slut).'); return;
+      }
+      if(toMinutes(standardPass.slut) <= toMinutes(standardPass.start)){
+        showToast('Standardpass är ogiltigt (slut ≤ start).'); return;
+      }
+
+      const {ok, proposals, conflicts} = await buildAutoSchedule({vikarie, period, standardPass});
+      if(!ok && !proposals.length){
+        showToast((conflicts[0]?.msg || 'Kan inte skapa förslag'), false);
+      }
+      renderPreviewModal({vikarie, proposals, conflicts, standardPass, period});
+    }
+
+    async function onSave(){
+      const payload = JSON.parse(el('btnSave').dataset.payload || '{"proposals":[]}');
+      const res = await createBookings(payload.proposals);
+      if(res.success){
+        showModal(false);
+        showToast(`Skapade ${payload.proposals.length} pass.`, true);
+      }else{
+        showToast(res.error || 'Kunde inte spara.');
+      }
+    }
+
+    // Wire up
+    el('vikarieSelect').addEventListener('change', updateVikInfo);
+    el('btnPreview').addEventListener('click', onPreview);
+    el('btnClose').addEventListener('click', ()=>showModal(false));
+    el('btnSave').addEventListener('click', onSave);
+
+    // start
+    populateVikarieSelect();
+    setDefaultDates();
   </script>
 </body>
 </html>
