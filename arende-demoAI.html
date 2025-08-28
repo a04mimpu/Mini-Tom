@@ -78,6 +78,21 @@
         </div>
       </div>
 
+
+<!-- AI-panel (visar Nomis live-svar + förslag) -->
+<div id="copilot" class="card" style="margin-top:12px;display:none">
+  <div class="head">AI-assistent</div>
+  <div class="body">
+    <!-- Streamad text i löpande prosa -->
+    <div id="chat" style="white-space:pre-wrap;min-height:60px"></div>
+    <!-- Förslag från AI (med “Använd detta”-knappar) -->
+    <div id="alt" class="note" style="margin-top:8px"></div>
+  </div>
+</div>
+
+      
+
+      
       <label for="beskrivning" style="margin-top:14px">BESKRIVNING (KÄLLA)</label>
       <textarea id="beskrivning" placeholder="iPhone 15, Gatan 2, mottagande chef Anna Larsson, ansvarskod 12345"></textarea>
       <div class="note">Tips: skriv valfri fritext – knappen <b>AI-tolka (Azure)</b> skickar texten till GPT-4o-mini och fyller fälten.</div>
@@ -215,5 +230,142 @@ $('cartBtn').onclick = ()=>{
 // Pre-fill demo text
 $('beskrivning').value = 'iPhone 15, Gatan 2, mottagande chef Anna Larsson, ansvarskod 12345';
 </script>
+  <script>
+// === KONFIG ===
+const FN_URL = "https://<din-functionapp>.azurewebsites.net/api/parse-stream"; // <-- BYT
+const DEBOUNCE_MS = 600;
+
+// === Hjälp (debounce) ===
+function debounce(fn, ms){ let t; return (...a)=>{ clearTimeout(t); t=setTimeout(()=>fn(...a), ms); }; }
+
+// === (Valfritt) Hjälpfunktioner om du inte redan har dem ===
+// Fyll dina fält (ersätt selector om dina id/namn är andra)
+function applyToForm(obj){
+  if(!obj) return;
+  if('namn' in obj)       document.getElementById('anvandare')?.value = obj.namn || '';
+  if('adress' in obj)     document.getElementById('adress')?.value    = obj.adress || '';
+  if('produkt' in obj)    document.getElementById('konfig')?.value    = obj.produkt || '';
+  if('ansvarskod' in obj) document.getElementById('ansvarskod')?.value= obj.ansvarskod || '';
+  // sätt rubrik om tom
+  const r = document.getElementById('rubrik');
+  if(r && !r.value && obj.produkt) r.value = `Beställning: ${obj.produkt}${obj.namn?` till ${obj.namn}`:''}`;
+}
+// Spara vidare till varukorgen
+function saveToStorage(extra={}){
+  const base = {
+    beskrivning: document.getElementById('beskrivning')?.value.trim() || '',
+    produkt: document.getElementById('konfig')?.value.trim() || '',
+    adress: document.getElementById('adress')?.value.trim() || '',
+    namn: document.getElementById('anvandare')?.value.trim() || '',
+    ansvarskod: document.getElementById('ansvarskod')?.value.trim() || '',
+    rubrik: document.getElementById('rubrik')?.value.trim() || '',
+    antal: 1, pris: 0
+  };
+  localStorage.setItem('arendeData', JSON.stringify({...base, ...extra}));
+}
+
+// === Streaming mot Function (SSE via fetch) ===
+async function talkAndStream(userText){
+  const panel = document.getElementById('copilot');
+  const chatEl = document.getElementById('chat');
+  const altEl  = document.getElementById('alt');
+  panel.style.display = 'block';
+  chatEl.textContent = ""; altEl.textContent = "";
+
+  // Enkel historik (kan byggas ut)
+  const messages = [
+    { role: "system", content: "Du är en svensk administrativ assistent. Svara kort och sakligt, föreslå alternativ vid behov." },
+    { role: "user",   content: `Beskrivning: "${userText}". Tolka fält, kommentera kort, och ge relevanta förslag.` }
+  ];
+
+  const res = await fetch(FN_URL, {
+    method: "POST",
+    headers: {"Content-Type":"application/json"},
+    body: JSON.stringify({ messages })
+  });
+
+  if(!res.ok){
+    chatEl.textContent = "Kunde inte kontakta AI (kontrollera Function-URL/CORS).";
+    return;
+  }
+
+  const reader = res.body.getReader();
+  const dec = new TextDecoder();
+  let rawBuffer = "";     // full text inkl. <<<STATE ... STATE>>>
+  let lastState = null;   // senaste parsade STATE
+
+  while(true){
+    const {value, done} = await reader.read();
+    if(done) break;
+    const chunk = dec.decode(value, {stream:true});
+
+    for(const line of chunk.split("\n")){
+      if(!line.startsWith("data:")) continue;
+      const payload = line.slice(5).trim();
+      if(!payload || payload==="[DONE]") continue;
+
+      try{
+        const json = JSON.parse(payload); // {choices:[{delta:{content:"..."}}]}
+        const delta = json?.choices?.[0]?.delta?.content || "";
+        if(!delta) continue;
+
+        rawBuffer += delta;
+
+        // Visa bara prosa (ta bort STATE-blocket i UI)
+        document.getElementById('chat').textContent =
+          rawBuffer.replace(/<<<STATE[\s\S]*STATE>>>/g, "").trim();
+
+        // Plocka senaste STATE
+        const m = rawBuffer.match(/<<<STATE([\s\S]*?)STATE>>>/);
+        if(m){
+          try{ lastState = JSON.parse(m[1]); }catch{}
+        }
+      }catch{}
+    }
+  }
+
+  // När strömmen är klar → autofyll + rendera förslag
+  if(lastState){
+    applyToForm({
+      produkt: lastState.produkt,
+      namn: lastState.namn,
+      adress: lastState.adress,
+      ansvarskod: lastState.ansvarskod
+    });
+    saveToStorage(lastState);
+
+    if(Array.isArray(lastState.forslag) && lastState.forslag.length){
+      altEl.innerHTML = lastState.forslag.slice(0,3).map((f,i)=>`
+        <div style="margin-top:10px;padding:10px;border:1px solid #19305d;border-radius:10px">
+          <div style="font-weight:700;margin-bottom:4px">${f.titel || 'Förslag'}</div>
+          <div class="note" style="margin-bottom:6px">${f.beskrivning || ''}</div>
+          <div class="note">Produkt: ${f.produkt || '—'} • Pris: ${f.pris ?? '—'}</div>
+          <button class="btn primary" data-i="${i}" style="margin-top:8px">Använd detta</button>
+        </div>`).join("");
+
+      altEl.querySelectorAll("button[data-i]").forEach(btn=>{
+        btn.onclick = ()=>{
+          const i = +btn.dataset.i;
+          const f = lastState.forslag[i] || {};
+          const patch = {};
+          if(f.produkt) patch.produkt = f.produkt;
+          if(typeof f.pris === "number") patch.pris = f.pris;
+          applyToForm(patch); saveToStorage(patch);
+        };
+      });
+    }
+  }
+}
+
+// Debounce när man skriver i Beskrivning
+const onType = debounce(()=>{
+  const t = document.getElementById('beskrivning').value.trim();
+  if(t.length >= 5){ talkAndStream(t); }
+}, DEBOUNCE_MS);
+
+// Starta live-copilot
+document.getElementById('beskrivning').addEventListener('input', onType);
+</script>
+
 </body>
 </html>
