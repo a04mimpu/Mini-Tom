@@ -1,245 +1,227 @@
-<!doctype html>
+
+<!DOCTYPE html>
 <html lang="sv">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Varukorg – Demo</title>
-<style>
-  :root{
-    --bg:#0b1733; --panel:#0f1c3a; --line:#19305d; --ink:#e9f3ff; --muted:#9fb6d8;
-    --head:#8edfff; --accent:#00e6ff;
-  }
-  html,body{margin:0;background:var(--bg);font-family:Segoe UI,Roboto,Arial,sans-serif;color:var(--ink)}
-  .wrap{max-width:1100px;margin:28px auto;padding:0 16px}
-  h1{margin:0 0 16px}
-  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:0 10px 28px rgba(0,0,0,.3)}
-  .head,.foot{padding:14px 18px;border-bottom:1px solid var(--line)}
-  .foot{border-top:1px solid var(--line);border-bottom:0;display:flex;gap:12px;justify-content:flex-end;background:#0b1733;border-radius:0 0 14px 14px;flex-wrap:wrap}
-  table{width:100%;border-collapse:collapse}
-  th,td{padding:12px;border-bottom:1px solid var(--line);text-align:left}
-  th{color:var(--head);font-weight:600}
-  input{
-    background:#0b1733;color:var(--ink);border:1px solid #2a457a;border-radius:8px;
-    padding:8px 10px;width:100%;box-sizing:border-box
-  }
-  .muted{color:var(--muted);font-size:13px;margin:8px 0 0}
-  .right{text-align:right}
-  .total{font-size:18px;font-weight:700;color:#bff7ff}
-  .btn{border:0;border-radius:10px;padding:10px 16px;font-weight:700;cursor:pointer}
-  .btn.primary{background:var(--accent);color:#062b33}
-  .btn.ghost{background:#22345e;color:#dff3ff;border:1px solid #34538f}
-</style>
+  <meta charset="UTF-8" />
+  <title>Varukorg</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: sans-serif;
+      background: #f9fdf9;
+    }
+    .topnav {
+      background-color: #1e6f3d;
+      overflow: hidden;
+      display: flex;
+    }
+    .topnav div {
+      color: white;
+      padding: 14px 20px;
+      text-align: center;
+      cursor: pointer;
+      border-right: 1px solid #14582d;
+    }
+    .topnav div:last-child {
+      border-right: none;
+    }
+    .main {
+      display: flex;
+    }
+    .menu {
+      background: #1e6f3d;
+      color: white;
+      width: 200px;
+      padding: 30px 10px;
+      height: 100vh;
+    }
+    .menu h2 {
+      margin-top: 0;
+      font-size: 20px;
+    }
+    .menu ul {
+      list-style: none;
+      padding: 0;
+    }
+    .menu li {
+      margin: 20px 0;
+      cursor: pointer;
+    }
+    .content {
+      flex: 1;
+      padding: 40px;
+    }
+    h1 {
+      font-size: 28px;
+      margin-bottom: 20px;
+    }
+    .box {
+      background: #e9ffe9;
+      border: 1px solid #b7e1b7;
+      padding: 20px;
+      margin-bottom: 20px;
+      border-radius: 8px;
+    }
+    .check {
+      font-size: 30px;
+      color: green;
+    }
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      margin-top: 10px;
+    }
+    #voiceStatus {
+      margin-top: 20px;
+      font-style: italic;
+      color: #555;
+    }
+    #fakturaModal {
+      display: none;
+      position: fixed;
+      z-index: 99;
+      left: 50%;
+      top: 30%;
+      transform: translate(-50%, -30%);
+      background: white;
+      padding: 20px;
+      border: 2px solid green;
+      box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.3);
+    }
+    #fakturaModal button {
+      margin-top: 10px;
+    }
+  </style>
 </head>
 <body>
-<div class="wrap">
-  <h1>Varukorg</h1>
+  <div class="topnav">
+    <div>Visma Proceedo</div>
+    <div>Inköp</div>
+    <div>Alla beställningar</div>
+    <div>Fakturor</div>
+    <div>Uppföljning</div>
+  </div>
 
-  <div class="card">
-    <div class="head">Artiklar</div>
-
-    <div style="padding:12px 18px">
-      <table>
-        <thead>
-          <tr>
-            <th style="width:22%">Produkt</th>
-            <th style="width:18%">Mottagare</th>
-            <th style="width:22%">Adress</th>
-            <th style="width:12%">Ansvarskod</th>
-            <th style="width:8%">Antal</th>
-            <th style="width:10%">Pris/st</th>
-            <th style="width:8%" class="right">Summa</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td><input id="prod"></td>
-            <td><input id="namn"></td>
-            <td><input id="adress"></td>
-            <td><input id="ansvarskod"></td>
-            <td><input id="antal" type="number" min="1" step="1"></td>
-            <td><input id="pris" type="number" min="0" step="0.01"></td>
-            <td class="right"><span id="summa">0</span> kr</td>
-          </tr>
-        </tbody>
-      </table>
-
-      <div class="muted" id="descLine">Beskrivning: —</div>
-      <div class="right total" style="margin-top:10px">Totalt: <span id="total">0</span> kr</div>
+  <div class="main">
+    <div class="menu">
+      <h2>📋 Meny</h2>
+      <ul>
+        <li>✅ Varukorg</li>
+        <li>📄 Fakturor</li>
+        <li>📦 Leveranser</li>
+      </ul>
     </div>
 
-    <div class="foot">
-      <button class="btn ghost" id="backBtn">Tillbaka</button>
-      <button class="btn ghost" id="readBtn">🔊 Läs upp (Tom)</button>
-      <button class="btn primary" id="saveBtn">Spara ändringar</button>
-      <button class="btn primary" id="sendBtn">Skicka mejl</button>
+    <div class="content">
+      <h1>Din varukorg 🛒</h1>
+      <div class="box">
+        <div class="check">✅</div>
+        <div><strong>Produkter:</strong><br><span id="produkt">-</span></div>
+      </div>
+      <div class="box">
+        <strong>Leveransadress:</strong>
+        <div id="adress">-</div>
+        <br>
+        <strong>Mottagare:</strong>
+        <div id="chef">-</div>
+      </div>
+
+      <div class="voice-box">
+        <p><strong>Tom:</strong> Läser upp beställningen och skickar mejl automatiskt</p>
+        <p id="voiceStatus"></p>
+        <p><em>Säg:</em> "Visa mig fakturan" eller "Skicka mejl"</p>
+        <div style="margin-top: 10px;">
+          <button onclick="startVoice()">🎙️ Prata med Tom</button>
+          <button onclick="skickaMailOchTele3()">📧 Skicka mejl manuellt</button>
+          <button onclick="visaFaktura()">📄 Visa faktura manuellt</button>
+        </div>
+      </div>
     </div>
   </div>
-</div>
 
-<script>
-  const $ = id => document.getElementById(id);
+  <div id="fakturaModal">
+    <h2>Faktura</h2>
+    <p>Fakturan gäller beställning #3471</p>
+    <p>Summa: 4 289 kr</p>
+    <p>Förfallodatum: 2025-09-01</p>
+    <button onclick="stängFaktura()">Stäng</button>
+  </div>
 
-  // ---------- Ladda / fyll ----------
-  function loadFromStorage(){
-    const raw = localStorage.getItem('arendeData');
-    let data = raw ? JSON.parse(raw) : null;
+  <script>
+    const produkter = JSON.parse(localStorage.getItem("produkter")) || [];
+    const chef = localStorage.getItem("mottagareNamn") || "Anna Larsson";
+    const adress = localStorage.getItem("mottagareAdress") || "Gatan 2";
 
-    if(!data){
-      data = {
-        beskrivning: localStorage.getItem('beskrivning') || '',
-        produkt:'', adress:'', namn:'', ansvarskod:'', rubrik:'',
-        antal: 1, pris: 0
-      };
-    } else {
-      data.antal = Number(data.antal ?? 1);
-      data.pris  = Number(data.pris ?? 0);
-    }
-    return data;
-  }
+    document.getElementById("produkt").innerHTML = produkter.map(p => `✅ ${p}`).join("<br>");
+    document.getElementById("chef").innerText = chef;
+    document.getElementById("adress").innerText = adress;
 
-  function fill(data){
-    $('prod').value = data.produkt || '';
-    $('namn').value = data.namn || '';
-    $('adress').value = data.adress || '';
-    $('ansvarskod').value = data.ansvarskod || '';
-    $('antal').value = data.antal;
-    $('pris').value  = Number.isFinite(data.pris) ? data.pris.toFixed(2) : data.pris;
-    $('descLine').textContent = 'Beskrivning: ' + (data.beskrivning || '—');
-    recalc();
-  }
-
-  function current(){
-    const prev = JSON.parse(localStorage.getItem('arendeData')||'{}');
-    return {
-      beskrivning: prev.beskrivning || localStorage.getItem('beskrivning') || '',
-      rubrik: prev.rubrik || '',
-      produkt: $('prod').value.trim(),
-      adress: $('adress').value.trim(),
-      namn: $('namn').value.trim(),
-      ansvarskod: $('ansvarskod').value.trim(),
-      antal: Number($('antal').value)||1,
-      pris:  Number($('pris').value)||0
+    const tts = new SpeechSynthesisUtterance(
+      `Jag har lagt ${produkter.join(", ")} i korgen. Leveransen går till ${adress}, till ${chef}. Nu skickar jag mejlet.`
+    );
+    tts.lang = "sv-SE";
+    tts.onend = () => {
+      skickaMailOchTele3();
     };
-  }
+    speechSynthesis.cancel();
+    speechSynthesis.speak(tts);
 
-  // ---------- Summa ----------
-  function recalc(){
-    const a = Number($('antal').value)||0;
-    const p = Number($('pris').value)||0;
-    const sum = Math.max(0, a*p);
-    $('summa').textContent = sum.toFixed(2);
-    $('total').textContent = sum.toFixed(2);
-  }
+    function skickaMailOchTele3() {
+      const email = chef.toLowerCase().replace(/[åä]/g, 'a').replace(/ö/g, 'o').replace(/\s+/g, '.') + "@example.se";
+      const subject = encodeURIComponent("Beställning från Tom");
+      const body = encodeURIComponent(
+        `Hej ${chef},
 
-  // ---------- Spara ----------
-  function save(){
-    const data = current();
-    localStorage.setItem('arendeData', JSON.stringify(data));
-    alert('Varukorg sparad ✔');
-  }
+Följande produkter har beställts:
 
-  // ---------- TTS (Tom) ----------
-  let selectedVoice = null;
-  function pickTomVoice(){
-    const voices = speechSynthesis.getVoices();
-    if(!voices.length) return null;
-    const order = [
-      v => /sv/i.test(v.lang) && /male|tom|google.*svenska/i.test(v.name),
-      v => /sv/i.test(v.lang),
-      v => /en/i.test(v.lang) && /male|tom|uk|google/i.test(v.name),
-      v => true
-    ];
-    for(const rule of order){ const hit = voices.find(rule); if(hit) return hit; }
-    return voices[0];
-  }
-  function speakOrder(d){
-    if(!('speechSynthesis' in window)){ alert('Text-to-speech stöds inte i denna webbläsare.'); return; }
-    window.speechSynthesis.cancel();
-    if(!selectedVoice) selectedVoice = pickTomVoice();
-    const text = `Beställning. Produkt: ${d.produkt||'saknas'}. ` +
-                 `Mottagare: ${d.namn||'saknas'}. Adress: ${d.adress||'saknas'}. ` +
-                 `Ansvarskod: ${d.ansvarskod||'saknas'}. ` +
-                 `Antal ${d.antal??1}, pris per styck ${d.pris??0} kronor. ` +
-                 `Totalt ${( (d.antal??1)*(d.pris??0) ).toFixed(2)} kronor.`;
-    const u = new SpeechSynthesisUtterance(text);
-    if(selectedVoice) u.voice = selectedVoice;
-    u.lang = (selectedVoice && selectedVoice.lang) || 'sv-SE';
-    u.rate = 0.95; u.pitch = 0.95; u.volume = 1.0;
-    speechSynthesis.speak(u);
-  }
-  if('speechSynthesis' in window){
-    speechSynthesis.onvoiceschanged = ()=>{ selectedVoice = pickTomVoice(); };
-  }
+- ${produkter.join("\n- ")}
 
-  // ---------- Skicka mejl ----------
-  function buildMailto({to="", subject="", body=""}) {
-    const CRLF = "%0D%0A";
-    const enc = s => encodeURIComponent(s);
-    const bodyEnc = enc(body).replace(/%0A/g, CRLF).replace(/%0D/g, "");
-    return `mailto:${encodeURIComponent(to)}?subject=${enc(subject)}&body=${bodyEnc}`;
-  }
-  function buildBodies(d) {
-    const total = ((d.antal ?? 1) * (d.pris ?? 0)).toFixed(2);
-    const subject = d.rubrik || `Beställning: ${d.produkt || ''}${d.namn ? ` till ${d.namn}` : ''}`;
-    const body =
-`Hej,
+Leveransadress:
+${adress}
 
-Jag vill beställa följande:
+Vänliga hälsningar,
+Tom – AI-assistent`
+      );
+      window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
 
-• Produkt: ${d.produkt || '—'}
-• Mottagare: ${d.namn || '—'}
-• Adress: ${d.adress || '—'}
-• Ansvarskod: ${d.ansvarskod || '—'}
-• Antal: ${d.antal ?? 1}
-• Pris/st: ${d.pris ?? 0} kr
-• Totalt: ${total} kr
+      const tele3beställningar = JSON.parse(localStorage.getItem("tele3beställningar")) || [];
+      tele3beställningar.push({ produkter, chef, adress, tid: new Date().toLocaleString() });
+      localStorage.setItem("tele3beställningar", JSON.stringify(tele3beställningar));
+    }
 
-Beskrivning: ${d.beskrivning || '—'}
+    function startVoice() {
+      const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+      recognition.lang = "sv-SE";
+      recognition.start();
 
-Vänligen`;
-    return {subject, body};
-  }
-  function gmailURL(to, subject, body) {
-    return `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(to)}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-  }
-  function outlookWebURL(to, subject, body) {
-    return `https://outlook.office.com/mail/deeplink/compose?to=${encodeURIComponent(to)}&subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-  }
-  function tryOpen(url){
-    const a = document.createElement('a'); a.href = url; a.style.display='none';
-    document.body.appendChild(a); a.click(); setTimeout(()=>a.remove(),0);
-  }
-  function sendMail(d){
-    const {subject, body} = buildBodies(d);
-    const to = d.namn ? (d.namn.split(' ').join('.').toLowerCase()+'@goteborg.se') : '';
-    const mailto = buildMailto({to, subject, body});
-    const hadFocus = document.hasFocus();
-    tryOpen(mailto);
-    setTimeout(()=>{
-      if(document.hasFocus() === hadFocus){
-        const choice = window.prompt(
-`Det verkar inte finnas någon standard-mejlklient kopplad.
+      recognition.onresult = (event) => {
+        const transcript = event.results[0][0].transcript.toLowerCase();
+        document.getElementById("voiceStatus").innerText = `📢 Du sa: "${transcript}"`;
 
-Skriv 'g' för Gmail, 'o' för Outlook Web, eller lämna tomt för att avbryta.`,
-          'o'
-        );
-        if(choice && choice.toLowerCase().startsWith('g')) window.open(gmailURL(to, subject, body),'_blank');
-        else if(choice && choice.toLowerCase().startsWith('o')) window.open(outlookWebURL(to, subject, body),'_blank');
-        else alert('Mejl skickades inte. Du kan kopiera texten och klistra in manuellt.');
-      }
-    }, 800);
-  }
+        if (transcript.includes("visa fakturan")) {
+          visaFaktura();
+        } else if (transcript.includes("skicka mejl")) {
+          const tts2 = new SpeechSynthesisUtterance(`Nu skickar jag mejlet till ${chef}`);
+          tts2.lang = "sv-SE";
+          tts2.onend = () => {
+            skickaMailOchTele3();
+          };
+          speechSynthesis.speak(tts2);
+        }
+      };
 
-  // ---------- Events ----------
-  $('antal').addEventListener('input', recalc);
-  $('pris').addEventListener('input', recalc);
-  $('saveBtn').onclick = () => save();
-  $('backBtn').onclick = () => history.back();
-  $('readBtn').onclick = () => speakOrder(current());
-  $('sendBtn').onclick = () => { const d = current(); localStorage.setItem('arendeData', JSON.stringify(d)); sendMail(d); };
+      recognition.onerror = () => {
+        document.getElementById("voiceStatus").innerText = "⚠️ Något gick fel med röstigenkänningen.";
+      };
+    }
 
-  // ---------- Init ----------
-  fill(loadFromStorage());
-</script>
+    function visaFaktura() {
+      document.getElementById("fakturaModal").style.display = "block";
+    }
+
+    function stängFaktura() {
+      document.getElementById("fakturaModal").style.display = "none";
+    }
+  </script>
 </body>
 </html>
