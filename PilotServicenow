@@ -2,78 +2,50 @@
 <html lang="sv">
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Ärende / Uppgift – Demo</title>
+<title>Varukorg – Demo</title>
 <style>
-  body{margin:0;background:#0b1733;font-family:Segoe UI,Roboto,Arial,sans-serif;color:#e9f3ff}
-  .wrap{max-width:1100px;margin:24px auto;padding:0 16px}
-  h1{font-size:20px;margin:0 0 12px}
-  .card{background:#f6f7fb;border:1px solid #dfe4ef;border-radius:14px;box-shadow:0 10px 28px rgba(0,0,0,.2);color:#1b2748}
-  .head,.foot{padding:14px 18px;border-bottom:1px solid #e4e9f5}
-  .foot{border-top:1px solid #e4e9f5;border-bottom:0;display:flex;gap:12px;justify-content:flex-end;background:#f9fbff}
-  .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;padding:18px}
-  .field{display:flex;gap:10px;align-items:center}
-  .field label{min-width:165px;color:#6c7a99;font-size:13px}
-  .req::after{content:" *";color:#e63c3c}
-  .ctrl{flex:1;position:relative}
-  input,select,textarea{width:100%;box-sizing:border-box;border:1px solid #dfe4ef;border-radius:10px;padding:10px 12px;font-size:14px;background:#fff}
-  textarea{min-height:90px}
+  body{margin:0;background:#081127;font-family:Segoe UI,Roboto,Arial,sans-serif;color:#e9f3ff}
+  .wrap{max-width:1000px;margin:28px auto;padding:0 16px}
+  h1{margin:0 0 16px}
+  .card{background:#0f1c3a;border:1px solid #19305d;border-radius:14px;box-shadow:0 10px 28px rgba(0,0,0,.3)}
+  .head,.foot{padding:14px 18px;border-bottom:1px solid #19305d}
+  .foot{border-top:1px solid #19305d;border-bottom:0;display:flex;gap:12px;justify-content:flex-end}
+  table{width:100%;border-collapse:collapse;color:#dff3ff}
+  th,td{padding:12px;border-bottom:1px solid #19305d;text-align:left}
+  th{color:#8edfff}
+  input{background:#0b1733;color:#e9f3ff;border:1px solid #2a457a;border-radius:8px;padding:8px 10px;width:100%;box-sizing:border-box}
+  .muted{color:#9fb6d8;font-size:13px}
   .btn{border:0;border-radius:10px;padding:10px 16px;font-weight:700;cursor:pointer}
   .btn.primary{background:#00e6ff;color:#062b33}
-  .btn.ghost{background:#eef3ff;color:#1b2b55;border:1px solid #cfe0ff}
-  .status{grid-column:1/-1;background:#061b33;color:#dff9ff;border:1px dashed rgba(0,230,255,.45);padding:10px 12px;border-radius:10px;font-size:13px;display:flex;flex-wrap:wrap;gap:10px}
-  .pill{padding:6px 10px;border-radius:999px;background:rgba(0,230,255,.12);border:1px solid rgba(0,230,255,.35);color:#b8f8ff}
+  .btn.ghost{background:#22345e;color:#dff3ff;border:1px solid #34538f}
 </style>
 
 <body>
 <div class="wrap">
-  <h1>Ärende / Uppgift · Ny post</h1>
+  <h1>Varukorg</h1>
   <div class="card">
-    <div class="head">Formulär (fält förfylls från <b>Beskrivning</b>)</div>
-    <div class="grid">
-      <div class="status" id="statusBar"></div>
-
-      <div class="field">
-        <label class="req" for="anvandare">Användare</label>
-        <div class="ctrl"><input id="anvandare" placeholder="Ex. Anna Larsson"></div>
-      </div>
-
-      <div class="field">
-        <label class="req" for="adress">Adress</label>
-        <div class="ctrl"><input id="adress" placeholder="Ex. Gatan 2"></div>
-      </div>
-
-      <div class="field">
-        <label class="req" for="konfig">Hårdvara / Artikel</label>
-        <div class="ctrl"><input id="konfig" placeholder="Ex. iPhone 15"></div>
-      </div>
-
-      <div class="field">
-        <label for="ansvarskod">Ansvarskod</label>
-        <div class="ctrl"><input id="ansvarskod" placeholder="(om det finns i texten)"></div>
-      </div>
-
-      <div class="field">
-        <label class="req" for="rubrik">Rubrik</label>
-        <div class="ctrl"><input id="rubrik" placeholder="Beställning: …"></div>
-      </div>
-
-      <div class="field">
-        <label for="kontakt">Kontaktmetod</label>
-        <div class="ctrl">
-          <select id="kontakt"><option>Telefon</option><option>E-post</option></select>
-        </div>
-      </div>
-
-      <div style="grid-column:1/-1;color:#3a4a72;font-weight:700;text-transform:uppercase;font-size:12px">Beskrivning (källa)</div>
-      <div style="grid-column:1/-1">
-        <textarea id="beskrivning" placeholder="Iphone 15, Gatan 2, Anna Larsson"></textarea>
-      </div>
+    <div class="head">Artiklar</div>
+    <div style="padding:12px 18px">
+      <table>
+        <thead>
+          <tr><th>Produkt</th><th>Mottagare</th><th>Adress</th><th>Ansvarskod</th><th>Rubrik</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><input id="prod"></td>
+            <td><input id="namn"></td>
+            <td><input id="adress"></td>
+            <td><input id="ansvarskod"></td>
+            <td><input id="rubrik"></td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="muted" id="descLine"></div>
     </div>
-
     <div class="foot">
-      <button class="btn ghost" id="resetBtn">Återställ</button>
-      <button class="btn primary" id="prefillBtn">Tolka & förifyll</button>
-      <button class="btn primary" id="toCartBtn">Till varukorg</button>
+      <button class="btn ghost" id="backBtn">Tillbaka</button>
+      <button class="btn primary" id="saveBtn">Spara ändringar</button>
+      <button class="btn primary" id="checkoutBtn">Gå vidare</button>
     </div>
   </div>
 </div>
@@ -81,98 +53,46 @@
 <script>
   const $ = id => document.getElementById(id);
 
-  // Enkel svensk parser
-  function parseDescription(text){
-    const res = { produkt:null, adress:null, namn:null, ansvarskod:null, raw:text||"" };
-    if(!text) return res;
-    const norm = text.replace(/;/g, ',').replace(/\s*,\s*/g, ',').replace(/\s+/g,' ').trim();
-    const ansv = norm.match(/ansvar(?:skod)?\s*:?[\s]*([0-9]{3,})/i);
-    if(ansv) res.ansvarskod = ansv[1];
+  function load(){
+    const raw = localStorage.getItem('arendeData');
+    let data = raw ? JSON.parse(raw) : null;
 
-    const parts = norm.split(',').map(t=>t.trim()).filter(Boolean);
-    const isName = s => /^[A-ZÅÄÖ][a-zåäö\-]+(?:\s+[A-ZÅÄÖ][a-zåäö\-]+)+$/.test(s);
-    const isAddress = s => /(gata|väg|gränd|plan|plats|allé|torget|street|road)/i.test(s) || /\d/.test(s);
-    const isProd = s => /(iphone|ipad|macbook|thinkpad|lenovo|dell|hp|samsung|galaxy|pixel|laptop|dator|skärm|monitor|headset)/i.test(s);
-
-    parts.forEach(p=>{
-      if(!res.produkt && isProd(p)) res.produkt = p.replace(/iphone/ig,'iPhone');
-      else if(!res.adress && isAddress(p)) res.adress = p;
-      else if(!res.namn && isName(p)) res.namn = p;
-    });
-
-    // Fallback: tolka ordningen P, A, N
-    if(parts.length>=3){
-      res.produkt = res.produkt || parts[0];
-      res.adress  = res.adress  || parts[1];
-      res.namn    = res.namn    || parts[2];
+    // Fallback: om bara beskrivning finns, försök tolka minimalt
+    if(!data){
+      const desc = localStorage.getItem('beskrivning') || '';
+      data = { beskrivning: desc, produkt:'', adress:'', namn:'', ansvarskod:'', rubrik:'' };
     }
-    return res;
+
+    $('prod').value = data.produkt || '';
+    $('namn').value = data.namn || '';
+    $('adress').value = data.adress || '';
+    $('ansvarskod').value = data.ansvarskod || '';
+    $('rubrik').value = data.rubrik || '';
+
+    $('descLine').textContent = 'Beskrivning: ' + (data.beskrivning || '—');
   }
 
-  function updateStatus(p){
-    const bar = $('statusBar'); bar.innerHTML = '';
-    const chip = (t)=>{ const s=document.createElement('span'); s.className='pill'; s.textContent=t; return s; };
-    bar.append('Tolkat: ');
-    bar.appendChild(chip('Produkt: '+(p.produkt||'—')));
-    bar.appendChild(chip('Adress: '+(p.adress||'—')));
-    bar.appendChild(chip('Namn: '+(p.namn||'—')));
-    if(p.ansvarskod) bar.appendChild(chip('Ansvarskod: '+p.ansvarskod));
-  }
-
-  function applyParsed(p){
-    if(p.namn) $('anvandare').value = p.namn;
-    if(p.adress) $('adress').value = p.adress;
-    if(p.produkt) $('konfig').value = p.produkt;
-    if(p.ansvarskod) $('ansvarskod').value = p.ansvarskod;
-    $('rubrik').value = `Beställning: ${p.produkt||''}${p.namn?` till ${p.namn}`:''}`.trim();
-  }
-
-  // Init med lagrat eller default
-  function init(){
-    const saved = localStorage.getItem('beskrivning');
-    $('beskrivning').value = saved || 'Iphone 15, Gatan 2, Anna Larsson';
-    const p = parseDescription($('beskrivning').value);
-    updateStatus(p); applyParsed(p);
-  }
-
-  $('prefillBtn').onclick = ()=>{
-    const txt = $('beskrivning').value.trim();
-    localStorage.setItem('beskrivning', txt);
-    const p = parseDescription(txt);
-    updateStatus(p); applyParsed(p);
-  };
-
-  $('resetBtn').onclick = ()=>{
-    localStorage.removeItem('beskrivning');
-    $('beskrivning').value = 'Iphone 15, Gatan 2, Anna Larsson';
-    const p = parseDescription($('beskrivning').value);
-    updateStatus(p); applyParsed(p);
-  };
-
-  // Skicka till varukorg
-  $('toCartBtn').onclick = ()=>{
-    const payload = {
-      beskrivning: $('beskrivning').value.trim(),
-      produkt: $('konfig').value.trim(),
+  function save(){
+    const current = {
+      beskrivning: (localStorage.getItem('arendeData') ? JSON.parse(localStorage.getItem('arendeData')).beskrivning : (localStorage.getItem('beskrivning')||'')),
+      produkt: $('prod').value.trim(),
       adress: $('adress').value.trim(),
-      namn: $('anvandare').value.trim(),
+      namn: $('namn').value.trim(),
       ansvarskod: $('ansvarskod').value.trim(),
-      rubrik: $('rubrik').value.trim(),
-      kontakt: $('kontakt').value
+      rubrik: $('rubrik').value.trim()
     };
-    localStorage.setItem('arendeData', JSON.stringify(payload));    // <-- allting följer med
-    // (behåll även gamla nyckeln för bakåtkomp)
-    localStorage.setItem('beskrivning', payload.beskrivning);
-    // gå till varukorg
-    window.location.href = 'varukorg.html';
+    localStorage.setItem('arendeData', JSON.stringify(current));
+    alert('Sparat i varukorg 👍');
+  }
+
+  $('saveBtn').onclick = save;
+  $('backBtn').onclick = ()=>history.back();
+  $('checkoutBtn').onclick = ()=>{
+    save();
+    alert('Här skulle nästa steg i flödet ta vid (kassa/attest).');
   };
 
-  // live-status
-  $('beskrivning').addEventListener('input', e=>{
-    updateStatus(parseDescription(e.target.value));
-  });
-
-  init();
+  load();
 </script>
 </body>
 </html>
