@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="sv">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Varukorg – Demo</title>
+<style>
+  :root{
+    --bg:#0b1733; --panel:#0f1c3a; --line:#19305d; --ink:#e9f3ff; --muted:#9fb6d8;
+    --head:#8edfff; --accent:#00e6ff;
+  }
+  html,body{margin:0;background:var(--bg);font-family:Segoe UI,Roboto,Arial,sans-serif;color:var(--ink)}
+  .wrap{max-width:1100px;margin:28px auto;padding:0 16px}
+  h1{margin:0 0 16px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:0 10px 28px rgba(0,0,0,.3)}
+  .head,.foot{padding:14px 18px;border-bottom:1px solid var(--line)}
+  .foot{border-top:1px solid var(--line);border-bottom:0;display:flex;gap:12px;justify-content:flex-end;background:#0b1733;border-radius:0 0 14px 14px;flex-wrap:wrap}
+  table{width:100%;border-collapse:collapse}
+  th,td{padding:12px;border-bottom:1px solid var(--line);text-align:left}
+  th{color:var(--head);font-weight:600}
+  input{
+    background:#0b1733;color:var(--ink);border:1px solid #2a457a;border-radius:8px;
+    padding:8px 10px;width:100%;box-sizing:border-box
+  }
+  .muted{color:var(--muted);font-size:13px;margin:8px 0 0}
+  .right{text-align:right}
+  .total{font-size:18px;font-weight:700;color:#bff7ff}
+  .btn{border:0;border-radius:10px;padding:10px 16px;font-weight:700;cursor:pointer}
+  .btn.primary{background:var(--accent);color:#062b33}
+  .btn.ghost{background:#22345e;color:#dff3ff;border:1px solid #34538f}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Varukorg</h1>
+
+  <div class="card">
+    <div class="head">Artiklar</div>
+
+    <div style="padding:12px 18px">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:22%">Produkt</th>
+            <th style="width:18%">Mottagare</th>
+            <th style="width:22%">Adress</th>
+            <th style="width:12%">Ansvarskod</th>
+            <th style="width:8%">Antal</th>
+            <th style="width:10%">Pris/st</th>
+            <th style="width:8%" class="right">Summa</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><input id="prod"></td>
+            <td><input id="namn"></td>
+            <td><input id="adress"></td>
+            <td><input id="ansvarskod"></td>
+            <td><input id="antal" type="number" min="1" step="1"></td>
+            <td><input id="pris" type="number" min="0" step="0.01"></td>
+            <td class="right"><span id="summa">0</span> kr</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="muted" id="descLine">Beskrivning: —</div>
+      <div class="right total" style="margin-top:10px">Totalt: <span id="total">0</span> kr</div>
+    </div>
+
+    <div class="foot">
+      <button class="btn ghost" id="backBtn">Tillbaka</button>
+      <button class="btn ghost" id="readBtn">🔊 Läs upp (Tom)</button>
+      <button class="btn primary" id="saveBtn">Spara ändringar</button>
+      <button class="btn primary" id="sendBtn">Skicka mejl</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const $ = id => document.getElementById(id);
+
+  // --- Ladda / fyll ----------------------------------------------------------
+  function loadFromStorage(){
+    const raw = localStorage.getItem('arendeData');
+    let data = raw ? JSON.parse(raw) : null;
+
+    if(!data){
+      data = {
+        beskrivning: localStorage.getItem('beskrivning') || '',
+        produkt:'', adress:'', namn:'', ansvarskod:'', rubrik:'',
+        antal: 1, pris: 0
+      };
+    } else {
+      data.antal = Number(data.antal ?? 1);
+      data.pris  = Number(data.pris ?? 0);
+    }
+    return data;
+  }
+
+  function fill(data){
+    $('prod').value = data.produkt || '';
+    $('namn').value = data.namn || '';
+    $('adress').value = data.adress || '';
+    $('ansvarskod').value = data.ansvarskod || '';
+    $('antal').value = data.antal;
+    $('pris').value  = (Number.isFinite(data.pris) ? data.pris.toFixed(2) : data.pris);
+    $('descLine').textContent = 'Beskrivning: ' + (data.beskrivning || '—');
+    recalc();
+  }
+
+  function current(){
+    const prev = JSON.parse(localStorage.getItem('arendeData')||'{}');
+    return {
+      beskrivning: prev.beskrivning || localStorage.getItem('beskrivning') || '',
+      rubrik: prev.rubrik || '',
+      produkt: $('prod').value.trim(),
+      adress: $('adress').value.trim(),
+      namn: $('namn').value.trim(),
+      ansvarskod: $('ansvarskod').value.trim(),
+      antal: Number($('antal').value)||1,
+      pris:  Number($('pris').value)||0
+    };
+  }
+
+  // --- Summa -----------------------------------------------------------------
+  function recalc(){
+    const a = Number($('antal').value)||0;
+    const p = Number($('pris').value)||0;
+    const sum = Math.max(0, a*p);
+    $('summa').textContent = sum.toFixed(2);
+    $('total').textContent = sum.toFixed(2);
+  }
+
+  // --- Spara -----------------------------------------------------------------
+  function save(){
+    const data = current();
+    localStorage.setItem('arendeData', JSON.stringify(data));
+    alert('Varukorg sparad ✔');
+  }
+
+  // --- TTS (Tom läser upp) ---------------------------------------------------
+  let selectedVoice = null;
+
+  function pickTomVoice(){
+    const voices = speechSynthesis.getVoices();
+    if(!voices.length) return null;
+
+    // prioritering: svensk manlig → svensk → engelsk manlig → första bästa
+    const order = [
+      v => /sv/i.test(v.lang) && /male|tom|google.*svenska/i.test(v.name),
+      v => /sv/i.test(v.lang),
+      v => /en/i.test(v.lang) && /male|tom|uk|google/i.test(v.name),
+      v => true
+    ];
+    for(const rule of order){
+      const hit = voices.find(rule);
+      if(hit) return hit;
+    }
+    return voices[0];
+  }
+
+  function speakOrder(d){
+    if(!('speechSynthesis' in window)){ alert('Text-to-speech stöds inte i denna webbläsare.'); return; }
+    window.speechSynthesis.cancel();
+    if(!selectedVoice) selectedVoice = pickTomVoice();
+
+    const text = `Beställning. Produkt: ${d.produkt||'saknas'}. ` +
+                 `Mottagare: ${d.namn||'saknas'}. Adress: ${d.adress||'saknas'}. ` +
+                 `Ansvarskod: ${d.ansvarskod||'saknas'}. ` +
+                 `Antal ${d.antal??1}, pris per styck ${d.pris??0} kronor. ` +
+                 `Totalt ${( (d.antal??1)*(d.pris??0) ).toFixed(2)} kronor.`;
+
+    const u = new SpeechSynthesisUtterance(text);
+    if(selectedVoice) u.voice = selectedVoice;
+    u.lang = (selectedVoice && selectedVoice.lang) || 'sv-SE';
+    u.rate = 0.95;
+    u.pitch = 0.95;
+    u.volume = 1.0;
+    speechSynthesis.speak(u);
+  }
+
+  if('speechSynthesis' in window){
+    speechSynthesis.onvoiceschanged = ()=>{ selectedVoice = pickTomVoice(); };
+  }
+
+  // --- Skicka mejl -----------------------------------------------------------
+  function sendMail(d){
+    const subject = encodeURIComponent(d.rubrik || `Beställning: ${d.produkt||''}${d.namn?` till ${d.namn}`:''}`);
+    const body = encodeURIComponent(
+`Hej,
+
+Jag vill beställa följande:
+
+• Produkt: ${d.produkt||'—'}
+• Mottagare: ${d.namn||'—'}
+• Adress: ${d.adress||'—'}
+• Ansvarskod: ${d.ansvarskod||'—'}
+• Antal: ${d.antal??1}
+• Pris/st: ${(d.pris??0)} kr
+• Totalt: ${(((d.antal??1)*(d.pris??0))).toFixed(2)} kr
+
+Beskrivning: ${d.beskrivning||'—'}
+
+Vänligen
+`
+    );
+    // ev. sätt standardmottagare baserat på namn
+    const to = d.namn ? (d.namn.split(' ').join('.').toLowerCase()+'@goteborg.se') : '';
+    window.location.href = `mailto:${to}?subject=${subject}&body=${body}`;
+  }
+
+  // --- Events ----------------------------------------------------------------
+  $('antal').addEventListener('input', recalc);
+  $('pris').addEventListener('input', recalc);
+
+  $('saveBtn').onclick = save;
+  $('backBtn').onclick = ()=>history.back();
+
+  $('readBtn').onclick = ()=>{
+    const d = current();
+    speakOrder(d);
+  };
+
+  $('sendBtn').onclick = ()=>{
+    const d = current();
+    // spara senaste ändringar innan skick
+    localStorage.setItem('arendeData', JSON.stringify(d));
+    sendMail(d);
+  };
+
+  // --- Init ------------------------------------------------------------------
+  fill(loadFromStorage());
+</script>
+</body>
+</html>
