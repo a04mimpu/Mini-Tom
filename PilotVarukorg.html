@@ -79,7 +79,7 @@
 <script>
   const $ = id => document.getElementById(id);
 
-  // --- Ladda / fyll ----------------------------------------------------------
+  // ---------- Ladda / fyll ----------
   function loadFromStorage(){
     const raw = localStorage.getItem('arendeData');
     let data = raw ? JSON.parse(raw) : null;
@@ -103,7 +103,7 @@
     $('adress').value = data.adress || '';
     $('ansvarskod').value = data.ansvarskod || '';
     $('antal').value = data.antal;
-    $('pris').value  = (Number.isFinite(data.pris) ? data.pris.toFixed(2) : data.pris);
+    $('pris').value  = Number.isFinite(data.pris) ? data.pris.toFixed(2) : data.pris;
     $('descLine').textContent = 'Beskrivning: ' + (data.beskrivning || '—');
     recalc();
   }
@@ -122,7 +122,7 @@
     };
   }
 
-  // --- Summa -----------------------------------------------------------------
+  // ---------- Summa ----------
   function recalc(){
     const a = Number($('antal').value)||0;
     const p = Number($('pris').value)||0;
@@ -131,104 +131,114 @@
     $('total').textContent = sum.toFixed(2);
   }
 
-  // --- Spara -----------------------------------------------------------------
+  // ---------- Spara ----------
   function save(){
     const data = current();
     localStorage.setItem('arendeData', JSON.stringify(data));
     alert('Varukorg sparad ✔');
   }
 
-  // --- TTS (Tom läser upp) ---------------------------------------------------
+  // ---------- TTS (Tom) ----------
   let selectedVoice = null;
-
   function pickTomVoice(){
     const voices = speechSynthesis.getVoices();
     if(!voices.length) return null;
-
-    // prioritering: svensk manlig → svensk → engelsk manlig → första bästa
     const order = [
       v => /sv/i.test(v.lang) && /male|tom|google.*svenska/i.test(v.name),
       v => /sv/i.test(v.lang),
       v => /en/i.test(v.lang) && /male|tom|uk|google/i.test(v.name),
       v => true
     ];
-    for(const rule of order){
-      const hit = voices.find(rule);
-      if(hit) return hit;
-    }
+    for(const rule of order){ const hit = voices.find(rule); if(hit) return hit; }
     return voices[0];
   }
-
   function speakOrder(d){
     if(!('speechSynthesis' in window)){ alert('Text-to-speech stöds inte i denna webbläsare.'); return; }
     window.speechSynthesis.cancel();
     if(!selectedVoice) selectedVoice = pickTomVoice();
-
     const text = `Beställning. Produkt: ${d.produkt||'saknas'}. ` +
                  `Mottagare: ${d.namn||'saknas'}. Adress: ${d.adress||'saknas'}. ` +
                  `Ansvarskod: ${d.ansvarskod||'saknas'}. ` +
                  `Antal ${d.antal??1}, pris per styck ${d.pris??0} kronor. ` +
                  `Totalt ${( (d.antal??1)*(d.pris??0) ).toFixed(2)} kronor.`;
-
     const u = new SpeechSynthesisUtterance(text);
     if(selectedVoice) u.voice = selectedVoice;
     u.lang = (selectedVoice && selectedVoice.lang) || 'sv-SE';
-    u.rate = 0.95;
-    u.pitch = 0.95;
-    u.volume = 1.0;
+    u.rate = 0.95; u.pitch = 0.95; u.volume = 1.0;
     speechSynthesis.speak(u);
   }
-
   if('speechSynthesis' in window){
     speechSynthesis.onvoiceschanged = ()=>{ selectedVoice = pickTomVoice(); };
   }
 
-  // --- Skicka mejl -----------------------------------------------------------
-  function sendMail(d){
-    const subject = encodeURIComponent(d.rubrik || `Beställning: ${d.produkt||''}${d.namn?` till ${d.namn}`:''}`);
-    const body = encodeURIComponent(
+  // ---------- Skicka mejl ----------
+  function buildMailto({to="", subject="", body=""}) {
+    const CRLF = "%0D%0A";
+    const enc = s => encodeURIComponent(s);
+    const bodyEnc = enc(body).replace(/%0A/g, CRLF).replace(/%0D/g, "");
+    return `mailto:${encodeURIComponent(to)}?subject=${enc(subject)}&body=${bodyEnc}`;
+  }
+  function buildBodies(d) {
+    const total = ((d.antal ?? 1) * (d.pris ?? 0)).toFixed(2);
+    const subject = d.rubrik || `Beställning: ${d.produkt || ''}${d.namn ? ` till ${d.namn}` : ''}`;
+    const body =
 `Hej,
 
 Jag vill beställa följande:
 
-• Produkt: ${d.produkt||'—'}
-• Mottagare: ${d.namn||'—'}
-• Adress: ${d.adress||'—'}
-• Ansvarskod: ${d.ansvarskod||'—'}
-• Antal: ${d.antal??1}
-• Pris/st: ${(d.pris??0)} kr
-• Totalt: ${(((d.antal??1)*(d.pris??0))).toFixed(2)} kr
+• Produkt: ${d.produkt || '—'}
+• Mottagare: ${d.namn || '—'}
+• Adress: ${d.adress || '—'}
+• Ansvarskod: ${d.ansvarskod || '—'}
+• Antal: ${d.antal ?? 1}
+• Pris/st: ${d.pris ?? 0} kr
+• Totalt: ${total} kr
 
-Beskrivning: ${d.beskrivning||'—'}
+Beskrivning: ${d.beskrivning || '—'}
 
-Vänligen
-`
-    );
-    // ev. sätt standardmottagare baserat på namn
+Vänligen`;
+    return {subject, body};
+  }
+  function gmailURL(to, subject, body) {
+    return `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(to)}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  }
+  function outlookWebURL(to, subject, body) {
+    return `https://outlook.office.com/mail/deeplink/compose?to=${encodeURIComponent(to)}&subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  }
+  function tryOpen(url){
+    const a = document.createElement('a'); a.href = url; a.style.display='none';
+    document.body.appendChild(a); a.click(); setTimeout(()=>a.remove(),0);
+  }
+  function sendMail(d){
+    const {subject, body} = buildBodies(d);
     const to = d.namn ? (d.namn.split(' ').join('.').toLowerCase()+'@goteborg.se') : '';
-    window.location.href = `mailto:${to}?subject=${subject}&body=${body}`;
+    const mailto = buildMailto({to, subject, body});
+    const hadFocus = document.hasFocus();
+    tryOpen(mailto);
+    setTimeout(()=>{
+      if(document.hasFocus() === hadFocus){
+        const choice = window.prompt(
+`Det verkar inte finnas någon standard-mejlklient kopplad.
+
+Skriv 'g' för Gmail, 'o' för Outlook Web, eller lämna tomt för att avbryta.`,
+          'o'
+        );
+        if(choice && choice.toLowerCase().startsWith('g')) window.open(gmailURL(to, subject, body),'_blank');
+        else if(choice && choice.toLowerCase().startsWith('o')) window.open(outlookWebURL(to, subject, body),'_blank');
+        else alert('Mejl skickades inte. Du kan kopiera texten och klistra in manuellt.');
+      }
+    }, 800);
   }
 
-  // --- Events ----------------------------------------------------------------
+  // ---------- Events ----------
   $('antal').addEventListener('input', recalc);
   $('pris').addEventListener('input', recalc);
+  $('saveBtn').onclick = () => save();
+  $('backBtn').onclick = () => history.back();
+  $('readBtn').onclick = () => speakOrder(current());
+  $('sendBtn').onclick = () => { const d = current(); localStorage.setItem('arendeData', JSON.stringify(d)); sendMail(d); };
 
-  $('saveBtn').onclick = save;
-  $('backBtn').onclick = ()=>history.back();
-
-  $('readBtn').onclick = ()=>{
-    const d = current();
-    speakOrder(d);
-  };
-
-  $('sendBtn').onclick = ()=>{
-    const d = current();
-    // spara senaste ändringar innan skick
-    localStorage.setItem('arendeData', JSON.stringify(d));
-    sendMail(d);
-  };
-
-  // --- Init ------------------------------------------------------------------
+  // ---------- Init ----------
   fill(loadFromStorage());
 </script>
 </body>
