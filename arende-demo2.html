@@ -1,0 +1,294 @@
+<!doctype html>
+<html lang="sv">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Ärende / Uppgift · Ny post (Demo)</title>
+<style>
+  :root{
+    --bg:#0b1733; --panel:#0f1c3a; --line:#19305d; --ink:#e9f3ff; --muted:#9fb6d8;
+    --chip:#0a2746; --accent:#00e6ff; --accentText:#062b33;
+  }
+  html,body{margin:0;background:var(--bg);font-family:Segoe UI,Roboto,Arial,sans-serif;color:var(--ink)}
+  .wrap{max-width:1180px;margin:24px auto;padding:0 16px}
+  h1{margin:0 0 12px}
+  .card{background:#0f1c3a;border:1px solid var(--line);border-radius:14px;box-shadow:0 10px 28px rgba(0,0,0,.3)}
+  .head{padding:14px 18px;border-bottom:1px solid var(--line);font-weight:600}
+  .body{padding:18px}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  label{font-size:13px;color:#9edbff;margin:8px 0 6px;display:block}
+  input,select,textarea{
+    width:100%;box-sizing:border-box;background:#0b1733;color:var(--ink);
+    border:1px solid #2a457a;border-radius:10px;padding:10px 12px
+  }
+  textarea{min-height:110px;resize:vertical}
+  .chips{background:#071c34;border:1px dashed #1f3e6c;border-radius:12px;padding:10px 12px;margin-bottom:18px;display:flex;gap:8px;flex-wrap:wrap}
+  .chip{background:var(--chip);border:1px solid #1f3e6c;padding:6px 10px;border-radius:999px;font-size:13px}
+  .foot{padding:14px 18px;border-top:1px solid var(--line);display:flex;gap:12px;justify-content:flex-end;background:#0b1733;border-radius:0 0 14px 14px;flex-wrap:wrap}
+  .btn{border:0;border-radius:10px;padding:10px 16px;font-weight:700;cursor:pointer}
+  .btn.primary{background:var(--accent);color:var(--accentText)}
+  .btn.ghost{background:#22345e;color:#dff3ff;border:1px solid #34538f}
+  .note{color:var(--muted);font-size:12px;margin-top:6px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Ärende / Uppgift · Ny post</h1>
+  <div class="card">
+    <div class="head">Formulär (fält förifylls från <b>Beskrivning</b>)</div>
+    <div class="body">
+      <div id="chips" class="chips" aria-live="polite">
+        <span class="chip">Tolkat:</span>
+      </div>
+
+      <div class="row">
+        <div>
+          <label for="anvandare">Användare *</label>
+          <input id="anvandare" placeholder="Användare">
+        </div>
+        <div>
+          <label for="adress">Adress *</label>
+          <input id="adress" placeholder="Adress">
+        </div>
+      </div>
+
+      <div class="row">
+        <div>
+          <label for="konfig">Hårdvara / Artikel *</label>
+          <input id="konfig" placeholder="Hårdvara / Artikel">
+        </div>
+        <div>
+          <label for="ansvarskod">Ansvarskod</label>
+          <input id="ansvarskod" placeholder="Ansvarskod">
+        </div>
+      </div>
+
+      <div class="row">
+        <div>
+          <label for="rubrik">Rubrik *</label>
+          <input id="rubrik" placeholder="Rubrik">
+        </div>
+        <div>
+          <label for="kontaktmetod">Kontaktmetod</label>
+          <select id="kontaktmetod">
+            <option>Telefon</option><option>E-post</option><option>Portal</option>
+          </select>
+        </div>
+      </div>
+
+      <label for="beskrivning" style="margin-top:14px">BESKRIVNING (KÄLLA)</label>
+      <textarea id="beskrivning" placeholder="iPhone 15, Gatan 2, mottagande chef Anna Larsson, ansvarskod 12345"></textarea>
+      <div class="note">Skriv valfri fritext – <b>AI-panelen</b> svarar live och fyller fält. Knappen <b>AI-tolka</b> gör en snabb tolkning utan streaming.</div>
+
+      <!-- AI-panel (live-svar + förslag) -->
+      <div id="copilot" class="card" style="margin-top:12px;display:none">
+        <div class="head">AI-assistent</div>
+        <div class="body">
+          <div id="chat" style="white-space:pre-wrap;min-height:60px"></div>
+          <div id="alt" class="note" style="margin-top:8px"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="foot">
+      <button class="btn ghost" id="resetBtn">Återställ</button>
+      <button class="btn ghost" id="ruleBtn">Tolka & förifyll (regler)</button>
+      <button class="btn primary" id="aiBtn">AI-tolka (snabb)</button>
+      <button class="btn primary" id="cartBtn">Till varukorg</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ===========================
+   0) Konfiguration
+=========================== */
+// Byt dessa till dina Function-URL:er
+const FN_URL_STREAM = "https://<din-functionapp>.azurewebsites.net/api/parse-stream"; // SSE/stream
+const FN_URL_PARSE  = "https://<din-functionapp>.azurewebsites.net/api/parse";        // snabb/icke-stream
+const DEBOUNCE_MS   = 600;
+
+/* ===========================
+   Hjälpare
+=========================== */
+const $ = (id)=>document.getElementById(id);
+function debounce(fn, ms){ let t; return (...a)=>{ clearTimeout(t); t=setTimeout(()=>fn(...a), ms); }; }
+function addChip(text){ const s=document.createElement('span'); s.className='chip'; s.textContent=text; $('chips').appendChild(s); }
+function clearChips(){ $('chips').innerHTML=''; addChip('Tolkat:'); }
+function buildPayload(){
+  return {
+    beskrivning: $('beskrivning').value.trim(),
+    produkt: $('konfig').value.trim(),
+    adress: $('adress').value.trim(),
+    namn: $('anvandare').value.trim(),
+    ansvarskod: $('ansvarskod').value.trim(),
+    rubrik: $('rubrik').value.trim(),
+    antal: 1, pris: 0
+  };
+}
+function applyToForm(obj){
+  if(!obj) return;
+  if('namn' in obj)       $('anvandare').value  = obj.namn || '';
+  if('adress' in obj)     $('adress').value     = obj.adress || '';
+  if('produkt' in obj)    $('konfig').value     = obj.produkt || '';
+  if('ansvarskod' in obj) $('ansvarskod').value = obj.ansvarskod || '';
+  if(!$('rubrik').value && obj.produkt){
+    $('rubrik').value = `Beställning: ${obj.produkt}${obj.namn?` till ${obj.namn}`:''}`;
+  }
+  clearChips();
+  if(obj.produkt) addChip(`Produkt: ${obj.produkt}`);
+  if(obj.adress) addChip(`Adress: ${obj.adress}`);
+  if(obj.namn) addChip(`Namn: ${obj.namn}`);
+  if(obj.ansvarskod) addChip(`Ansvarskod: ${obj.ansvarskod}`);
+}
+function saveToStorage(extra={}){
+  const base = buildPayload();
+  localStorage.setItem('arendeData', JSON.stringify({...base, ...extra}));
+}
+
+/* ===========================
+   1) Regelbaserad fallback (enkel)
+=========================== */
+function parseDescription(txt){
+  const produkt = (txt.match(/iphone\s*1[5-9]|ipad|laptop|dator/i)||[])[0] || null;
+  const namn = (txt.match(/([A-ZÅÄÖ][a-zåäö]+)\s+([A-ZÅÄÖ][a-zåäö]+)/)||[]).slice(0,3).join(' ') || null;
+  const adr = (txt.match(/\b([A-ZÅÄÖa-zåäö]+)\s*\d+\b/)||[])[0] || null;
+  const kod = (txt.match(/\bansvar(skod)?\s*:?\s*(\d{3,})/i)||[])[2] || (txt.match(/\b\d{3,}\b/)||[])[0] || null;
+  return { produkt: produkt?produkt.replace(/\s+/g,' ').trim():null,
+           namn: namn||null, adress: adr||null, ansvarskod: kod||null };
+}
+
+/* ===========================
+   2) AI – snabb (icke-stream) via proxy
+=========================== */
+async function aiParseViaProxy(text){
+  const r = await fetch(FN_URL_PARSE, {
+    method: "POST",
+    headers: {"Content-Type":"application/json"},
+    body: JSON.stringify({ description: text })
+  });
+  if(!r.ok) throw new Error(await r.text());
+  return await r.json(); // {produkt, namn, adress, ansvarskod, ...}
+}
+
+/* ===========================
+   3) AI – live streaming (SSE) via proxy
+   Förväntar sig att serverns svar innehåller löptext + STATE i block:
+   <<<STATE { ...json... } STATE>>>
+=========================== */
+async function talkAndStream(userText){
+  const panel = $('copilot'), chatEl = $('chat'), altEl = $('alt');
+  panel.style.display = 'block'; chatEl.textContent = ""; altEl.textContent = "";
+
+  const messages = [
+    { role: "system", content: "Du är en svensk administrativ assistent. Svara kort, spontant och sakligt. Föreslå alternativ när relevant." },
+    { role: "user",   content: `Beskrivning: "${userText}". Tolka fält, kommentera kort, ge ev. förslag.` }
+  ];
+
+  const res = await fetch(FN_URL_STREAM, {
+    method: "POST",
+    headers: {"Content-Type":"application/json"},
+    body: JSON.stringify({ messages })
+  });
+  if(!res.ok){ chatEl.textContent = "Kunde inte kontakta AI (kontrollera Function-URL/CORS)."; return; }
+
+  const reader = res.body.getReader();
+  const dec = new TextDecoder();
+  let rawBuffer = "", lastState = null;
+
+  while(true){
+    const {value, done} = await reader.read();
+    if(done) break;
+    const chunk = dec.decode(value, {stream:true});
+
+    for(const line of chunk.split("\n")){
+      if(!line.startsWith("data:")) continue;
+      const payload = line.slice(5).trim();
+      if(!payload || payload === "[DONE]") continue;
+
+      try{
+        const json = JSON.parse(payload); // {choices:[{delta:{content:"..."}}]}
+        const delta = json?.choices?.[0]?.delta?.content || "";
+        if(!delta) continue;
+
+        rawBuffer += delta;
+
+        // Visa prosa utan STATE
+        chatEl.textContent = rawBuffer.replace(/<<<STATE[\s\S]*STATE>>>/g, "").trim();
+
+        // Hämta senaste STATE
+        const m = rawBuffer.match(/<<<STATE([\s\S]*?)STATE>>>/);
+        if(m){ try{ lastState = JSON.parse(m[1]); }catch{} }
+      }catch{}
+    }
+  }
+
+  if(lastState){
+    applyToForm({
+      produkt: lastState.produkt,
+      namn: lastState.namn,
+      adress: lastState.adress,
+      ansvarskod: lastState.ansvarskod
+    });
+    saveToStorage(lastState);
+
+    if(Array.isArray(lastState.forslag) && lastState.forslag.length){
+      altEl.innerHTML = lastState.forslag.slice(0,3).map((f,i)=>`
+        <div style="margin-top:10px;padding:10px;border:1px solid #19305d;border-radius:10px">
+          <div style="font-weight:700;margin-bottom:4px">${f.titel || 'Förslag'}</div>
+          <div class="note" style="margin-bottom:6px">${f.beskrivning || ''}</div>
+          <div class="note">Produkt: ${f.produkt || '—'} • Pris: ${f.pris ?? '—'}</div>
+          <button class="btn primary" data-i="${i}" style="margin-top:8px">Använd detta</button>
+        </div>`).join("");
+      altEl.querySelectorAll("button[data-i]").forEach(btn=>{
+        btn.onclick = ()=>{
+          const i = +btn.dataset.i;
+          const f = lastState.forslag[i] || {};
+          const patch = {};
+          if(f.produkt) patch.produkt = f.produkt;
+          if(typeof f.pris === "number") patch.pris = f.pris;
+          applyToForm(patch); saveToStorage(patch);
+        };
+      });
+    }
+  }
+}
+
+/* ===========================
+   4) Events
+=========================== */
+$('resetBtn').onclick = ()=>{
+  ['anvandare','adress','konfig','ansvarskod','rubrik','beskrivning'].forEach(id=>$(id).value='');
+  clearChips(); saveToStorage();
+};
+$('ruleBtn').onclick = ()=>{
+  const p = parseDescription($('beskrivning').value.trim());
+  applyToForm(p); saveToStorage(p);
+};
+$('aiBtn').onclick = async ()=>{
+  try{
+    const ai = await aiParseViaProxy($('beskrivning').value.trim());
+    applyToForm(ai); saveToStorage(ai);
+  }catch(e){ console.error(e); alert('AI-tolkningen misslyckades. Se konsolen.'); }
+};
+$('cartBtn').onclick = ()=>{
+  saveToStorage();
+  window.location.href = 'varukorg.html';
+};
+
+// Live-copilot när man skriver (debounce)
+const onType = debounce(()=>{
+  const t = $('beskrivning').value.trim();
+  if(t.length >= 5){ talkAndStream(t); }
+}, DEBOUNCE_MS);
+$('beskrivning').addEventListener('input', onType);
+
+// Demo-prefill + autostart
+$('beskrivning').value = 'iPhone 15, Gatan 2, mottagande chef Anna Larsson, ansvarskod 12345';
+window.addEventListener('DOMContentLoaded', ()=>{
+  const t = $('beskrivning').value.trim();
+  if(t.length >= 5){ talkAndStream(t); }
+});
+</script>
+</body>
+</html>
